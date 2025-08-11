@@ -7,6 +7,7 @@ const connectDB = require("./Db/db"); // ✅ CommonJS style import
 const contactRoutes = require("./Routes/Contact");
 
 
+
 const app = express();
 app.use(cors());
 app.use(express.json());
