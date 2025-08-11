@@ -6,10 +6,10 @@ const connectDB = require("./Db/db");
 
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
-const categoriesRoute = require("./Routes/User");
-const CoursesRoute = require("./Routes/User");
-const ExamTypeRoute = require("./Routes/User");
-const ExamRoute = require("./Routes/User");
+const categoriesRoute = require("./Routes/Category");
+const CoursesRoute = require("./Routes/course");
+const ExamTypeRoute = require("./Routes/examType");
+const ExamRoute = require("./Routes/exam");
 
 
 const app = express();
