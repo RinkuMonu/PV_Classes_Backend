@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const CourseSchema = new Schema({
-  title: { type: String, required: true }, // e.g. PYQs, Test Series
+  title: { type: String, required: true },
   slug: { type: String, required: true },
   exam: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
-  type: { type: String }, // e.g. 'PYQ', 'Study Material', 'Test Series'
+  type: { type: String },
   price: { type: Number, default: 0 },
   isFree: { type: Boolean, default: false },
   overview: { type: String },
@@ -16,6 +16,7 @@ const CourseSchema = new Schema({
     required: true
   },
   details: {
+    language: [{ type: String }], // e.g. ['Hindi', 'English']
     offerings: [{ title: String, description: String }],
     books: [{ title: String, author: String, link: String }],
     faculty: [{ name: String, bio: String, avatar: String }],

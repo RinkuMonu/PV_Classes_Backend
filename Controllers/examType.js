@@ -1,4 +1,4 @@
-const ExamType = require("../models/ExamType");
+const ExamType = require("../Models/ExamType");
 
 // Create exam type
 exports.createExamType = async (req, res) => {

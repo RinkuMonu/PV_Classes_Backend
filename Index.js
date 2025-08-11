@@ -11,6 +11,7 @@ const CoursesRoute = require("./Routes/User");
 const ExamTypeRoute = require("./Routes/User");
 const ExamRoute = require("./Routes/User");
 
+
 const app = express();
 app.use(cors());
 app.use(express.json());

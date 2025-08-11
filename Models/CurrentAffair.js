@@ -6,7 +6,7 @@ const CurrentAffairSchema = new Schema({
   slug: { type: String, required: true, unique: true },
   category: { type: String, default: 'General' },
   tags: [{ type: String }],
-  content: { type: String, required: true }, // HTML or plain text
+  content: { type: String, required: true },
   image: { type: String },
   pdfLink: { type: String },
   videoLink: { type: String },
