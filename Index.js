@@ -4,6 +4,10 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./Db/db"); // ✅ CommonJS style import
 
+
+const contactRoutes = require("./Routes/Contact");
+
+
 const app = express();
 
 // Middleware
@@ -17,6 +21,10 @@ connectDB();
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
+
+
+app.use("/api/contacts", contactRoutes);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
