@@ -33,6 +33,7 @@ exports.getOtp = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 exports.loginUser = async (req, res) => {
   try {
     const { mobile, otp } = req.body;
@@ -75,6 +76,7 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -95,6 +97,7 @@ exports.getUserData = async (req, res) => {
     });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, state, district, profile_image } = req.body;
