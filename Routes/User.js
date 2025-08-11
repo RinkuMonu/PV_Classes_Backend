@@ -6,12 +6,17 @@ const {
     getOtp,
     loginUser,
     updateUser,
-    getUserData
+    getUserData,
+    getAllUserData,
+    updateUserStatus
 } = require("../Controllers/userController");
 
 router.post("/get-otp", getOtp);
 router.post("/login", loginUser);
 router.get("/getUser",auth, getUserData);
+router.get("/getAllUser",auth, getAllUserData);
+router.put("/updateStatus",auth, updateUserStatus);
+
 const path = require("path");
 
 router.put(

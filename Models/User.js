@@ -7,7 +7,12 @@ const UserSchema = new mongoose.Schema(
     number: { type: String, required: true, trim: true },
     referral_code: { type: String, default: null },
     otp: { type: Number, required: false },
-    course_id: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: false },
+    course_id: { type: mongoose.Schema.Types.ObjectId, ref: "CourseCategory", required: false },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
     state: { type: String, required: false },
     district: { type: String, required: false },
     profile_image: { type: String, default: null },
