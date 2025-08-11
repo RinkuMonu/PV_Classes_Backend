@@ -9,6 +9,12 @@ const CourseSchema = new Schema({
   price: { type: Number, default: 0 },
   isFree: { type: Boolean, default: false },
   overview: { type: String },
+  status: { 
+    type: String, 
+    enum: ['active', 'inactive'], 
+    default: 'active',
+    required: true
+  },
   details: {
     offerings: [{ title: String, description: String }],
     books: [{ title: String, author: String, link: String }],
