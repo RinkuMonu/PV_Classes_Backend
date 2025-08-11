@@ -1,4 +1,4 @@
-const Course = require("../models/Course");
+const Course = require("../Models/Course");
 
 // Create course
 exports.createCourse = async (req, res) => {
@@ -11,14 +11,82 @@ exports.createCourse = async (req, res) => {
 };
 
 // Get all courses
+// exports.getCourses = async (req, res) => {
+//     try {
+//         const courses = await Course.find().populate("exam").sort({ createdAt: -1 });
+//         res.status(200).json(courses);
+//     } catch (error) {
+//         res.status(500).json({ message: "Error fetching courses", error: error.message });
+//     }
+// };
+
+// Get all courses with filters
 exports.getCourses = async (req, res) => {
     try {
-        const courses = await Course.find().populate("exam").sort({ createdAt: -1 });
-        res.status(200).json(courses);
+        let filter = {};
+
+        // Filter by exam ID
+        if (req.query.exam) {
+            filter.exam = req.query.exam;
+        }
+
+        // Filter by language (Array allowed)
+        if (req.query.language) {
+            const langs = req.query.language.split(",");
+            filter["details.language"] = { $in: langs };
+        }
+
+        // Filter by mode (Free, Paid, All)
+        if (req.query.mode && req.query.mode !== "All") {
+            if (req.query.mode === "Free") {
+                filter.isFree = true;
+            } else if (req.query.mode === "Paid") {
+                filter.isFree = false;
+            }
+        }
+
+        // Filter by course type
+        if (req.query.type && req.query.type !== "All") {
+            const types = req.query.type.split(",");
+            filter.type = { $in: types };
+        }
+
+        // Status filter (active/inactive)
+        if (req.query.status) {
+            filter.status = req.query.status;
+        }
+
+        // Search by title
+        if (req.query.search) {
+            filter.title = { $regex: req.query.search, $options: "i" };
+        }
+
+        // Pagination params
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        // Total count for pagination info
+        const totalCourses = await Course.countDocuments(filter);
+
+        const courses = await Course.find(filter)
+            .populate("exam")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        res.status(200).json({
+            total: totalCourses,
+            page,
+            totalPages: Math.ceil(totalCourses / limit),
+            courses
+        });
+
     } catch (error) {
         res.status(500).json({ message: "Error fetching courses", error: error.message });
     }
 };
+
 
 // Get course by ID
 exports.getCourseById = async (req, res) => {
