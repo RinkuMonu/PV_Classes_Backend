@@ -81,6 +81,7 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -101,6 +102,7 @@ exports.getUserData = async (req, res) => {
     });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, state, district } = req.body; // form-data text fields
