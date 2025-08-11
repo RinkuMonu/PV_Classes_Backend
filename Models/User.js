@@ -2,15 +2,20 @@ const mongoose = require("mongoose");
 const url = process.env.BASE_URL;
 const UserSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    name: { type: String, required: false, trim: true },
+    email: { type: String, required: false, lowercase: true, trim: true },
     number: { type: String, required: true, trim: true },
     referral_code: { type: String, default: null },
-    otp: { type: String, required: true },
-    course_id: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-    state: { type: String, required: true },
-    district: { type: String, required: true },
+    otp: { type: Number, required: false },
+    course_id: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: false },
+    state: { type: String, required: false },
+    district: { type: String, required: false },
     profile_image: { type: String, default: null },
+    role: {
+      type: String,
+      enum: ["user", "teacher", "admin"],
+      default: "user"
+    }
   },
   { 
     timestamps: true,
