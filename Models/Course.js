@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const CourseSchema = new Schema({
-  title: { type: String, required: true }, // e.g. PYQs, Test Series
+  title: { type: String, required: true },
   slug: { type: String, required: true },
   exam: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
   type: { type: String }, // e.g. 'PYQ', 'Study Material', 'Test Series'
