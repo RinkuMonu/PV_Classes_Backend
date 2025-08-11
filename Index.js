@@ -28,9 +28,9 @@ app.get("/", (req, res) => {
 app.use("/api/contacts", contactRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/categories", categoriesRoute);
-app.use("/api/courses", CoursesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
+app.use("/api/courses", CoursesRoute);
 
 
 app.use((err, req, res, next) => {
