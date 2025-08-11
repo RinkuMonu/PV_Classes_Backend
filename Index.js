@@ -5,7 +5,10 @@ const connectDB = require("./Db/db");
 const userRoute = require("./Routes/User");
 const app = express();
 app.use(cors());
-app.use(express.json());
+// server.js
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+
 connectDB();
 app.use("/api/users",userRoute);
 app.get("/", (req, res) => {
