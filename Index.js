@@ -1,4 +1,3 @@
-// server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -9,15 +8,10 @@ const contactRoutes = require("./Routes/Contact");
 
 
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Connect to MongoDB
 connectDB();
-
-// Routes
+app.use("/api/users",userRoute);
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
