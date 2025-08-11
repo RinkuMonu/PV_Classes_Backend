@@ -7,6 +7,7 @@ const cors = require("cors");
 // Initialize Express app
 const app = express();
 
+
 // Middleware
 app.use(cors());
 app.use(express.json()); // Parse JSON bodies
