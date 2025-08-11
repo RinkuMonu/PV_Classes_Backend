@@ -1,11 +1,15 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./Db/db"); // ✅ CommonJS style import
+const connectDB = require("./Db/db");
 
 
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
+const categoriesRoute = require("./Routes/User");
+const CoursesRoute = require("./Routes/User");
+const ExamTypeRoute = require("./Routes/User");
+const ExamRoute = require("./Routes/User");
 
 const app = express();
 app.use(cors());
@@ -19,8 +23,12 @@ app.get("/", (req, res) => {
 
 app.use("/api/contacts", contactRoutes);
 app.use("/api/users", userRoute);
+app.use("/api/categories", categoriesRoute);
+app.use("/api/courses", CoursesRoute);
+app.use("/api/exam-types", ExamTypeRoute);
+app.use("/api/exams", ExamRoute);
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Something went wrong!" });
