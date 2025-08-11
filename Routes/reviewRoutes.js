@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const reviewController = require('../controllers/reviewController');
+const reviewController = require('../Controllers/reviewController');
 const { protect, admin } = require('../middlewares/authMiddleware');
 
 // User adds review

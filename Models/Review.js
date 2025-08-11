@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const ReviewSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   
-  // Kis cheez ka review hai (Course ya Coaching)
   reviewType: { 
     type: String, 
     enum: ['course', 'coaching'], 
@@ -23,7 +22,7 @@ const ReviewSchema = new Schema({
 
   comment: { type: String, trim: true },
 
-  approved: { type: Boolean, default: false } // Admin approve karega
+  approved: { type: Boolean, default: false } // Admin approved reviews
 
 }, { timestamps: true });
 
