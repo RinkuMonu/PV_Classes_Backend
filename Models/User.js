@@ -11,6 +11,11 @@ const UserSchema = new mongoose.Schema(
     state: { type: String, required: false },
     district: { type: String, required: false },
     profile_image: { type: String, default: null },
+    role: {
+      type: String,
+      enum: ["user", "teacher", "admin"],
+      default: "user"
+    }
   },
   { 
     timestamps: true,
