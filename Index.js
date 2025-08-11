@@ -10,7 +10,8 @@ const categoriesRoute = require("./Routes/Category");
 const CoursesRoute = require("./Routes/course");
 const ExamTypeRoute = require("./Routes/examType");
 const ExamRoute = require("./Routes/exam");
-
+const wishlistRoutes = require("./Routes/wishlist");
+const couponRoutes = require("./Routes/coupon");
 
 const app = express();
 app.use(cors());
@@ -30,7 +31,12 @@ app.use("/api/users", userRoute);
 app.use("/api/categories", categoriesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
+
 app.use("/api/courses", CoursesRoute);
+
+
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/coupon", couponRoutes);
 
 
 app.use((err, req, res, next) => {
