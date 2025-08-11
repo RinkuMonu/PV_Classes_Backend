@@ -9,45 +9,50 @@ exports.getOtp = async (req, res) => {
     if (!number) {
       return res.status(400).json({ message: "Phone number is required" });
     }
-    const user = await User.findOne({ number });
+
+    let user = await User.findOne({ number }); // let use karo
     if (!user) {
-      return res.status(404).json({ message: "User not found with this phone number" });
+      user = new User({ number }); // directly number pass karo
     }
+
     const otp = Math.floor(10000 + Math.random() * 90000).toString();
     user.otp = otp;
+
     if (referral_code) {
       user.referral_code = referral_code;
     }
+
     await user.save();
+
     res.status(200).json({
       message: "OTP sent successfully",
       data: {
         number: user.number,
         referral_code: user.referral_code || null,
-        otp: otp 
+        otp: otp
       }
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Get OTP Error:", error);
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
 exports.loginUser = async (req, res) => {
   try {
-    const { mobile, otp } = req.body;
+    const { number, otp } = req.body;
 
-    if (!mobile || !otp) {
+    if (!number || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
 
-    const user = await User.findOne({ mobile });
+    const user = await User.findOne({ number });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.otp !== otp) {
+    if (user.otp !== Number(otp)) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
@@ -60,7 +65,7 @@ exports.loginUser = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, mobile: user.mobile },
+      { id: user._id, number: user.number },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
@@ -100,14 +105,22 @@ exports.getUserData = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, state, district, profile_image } = req.body;
+    const { name, email, state, district } = req.body; // form-data text fields
     const userId = req.user.id;
+
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (state) updateData.state = state;
     if (district) updateData.district = district;
-    if (profile_image) updateData.profile_image = profile_image;
+
+    // Agar file aayi hai to multer se path save karo
+    if (req.file) {
+        const fileUrl = `${req.protocol}://${req.get("host")}/uploads/profile_image/${req.file.filename}`;
+        updateData.profile_image = req.file.filename;
+        updateData.profile_image_url = fileUrl;
+    }
+
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
