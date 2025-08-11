@@ -9,6 +9,12 @@ const CourseSchema = new Schema({
   price: { type: Number, default: 0 },
   isFree: { type: Boolean, default: false },
   overview: { type: String },
+  status: { 
+    type: String, 
+    enum: ['active', 'inactive'], 
+    default: 'active',
+    required: true
+  },
   details: {
     offerings: [{ title: String, description: String }],
     books: [{ title: String, author: String, link: String }],
@@ -16,6 +22,6 @@ const CourseSchema = new Schema({
     freeContent: [{ title: String, url: String, type: String }],
     faqs: [{ q: String, a: String }]
   }
-}, { timestamps: true });
+}, { timestamps: true }); 
 
 module.exports = mongoose.model('Course', CourseSchema);
