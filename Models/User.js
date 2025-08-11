@@ -19,12 +19,11 @@ const UserSchema = new mongoose.Schema(
   },
   { 
     timestamps: true,
-    toJSON: { virtuals: true }, // JSON me virtual fields show karne ke liye
+    toJSON: { virtuals: true },
     toObject: { virtuals: true }
   }
 );
 
-// Virtual field for full profile image URL
 UserSchema.virtual("profile_image_url").get(function () {
   if (this.profile_image) {
     return `${process.env.BASE_URL}/uploads/${this.profile_image}`;
