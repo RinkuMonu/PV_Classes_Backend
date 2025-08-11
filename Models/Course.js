@@ -11,7 +11,7 @@ const CourseSchema = new Schema({
   overview: { type: String },
   status: { 
     type: String, 
-    enum: ['active', 'inactive'], 
+    enum: ['active', 'inactive'],
     default: 'active',
     required: true
   },
@@ -23,6 +23,6 @@ const CourseSchema = new Schema({
     freeContent: [{ title: String, url: String, type: String }],
     faqs: [{ q: String, a: String }]
   }
-}, { timestamps: true }); 
+}, { timestamps: true });
 
 module.exports = mongoose.model('Course', CourseSchema);
