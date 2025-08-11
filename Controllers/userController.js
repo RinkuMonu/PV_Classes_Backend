@@ -69,11 +69,9 @@ exports.loginUser = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
-
     res.status(200).json({
       message: "Login successful",
       token,
-      redirect: "/dashboard"
     });
 
   } catch (error) {
