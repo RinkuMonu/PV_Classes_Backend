@@ -6,7 +6,6 @@ const connectDB = require("./Db/db");
 
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
-const categoriesRoute = require("./Routes/User");
 const CourseCategoryRoute = require("./Routes/CourseCategory");
 
 const categoriesRoute = require("./Routes/Category");
