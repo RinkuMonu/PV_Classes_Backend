@@ -25,9 +25,31 @@ exports.getCategories = async (req, res) => {
 // Create Blog Post
 exports.createCurrentAffair = async (req, res) => {
   try {
-    const post = new CurrentAffair(req.body);
+    let imagePath = "";
+    if (req.file) {
+      imagePath = `/uploads/currentaffair/${req.file.filename}`;
+    }
+
+    const postData = {
+      title: req.body.title,
+      slug: req.body.slug,
+      content: req.body.content,
+      excerpt: req.body.excerpt || "",
+      category: req.body.category,
+      tags: req.body.tags ? req.body.tags.split(",").map(tag => tag.trim()) : [],
+      publishDate: req.body.publishDate || Date.now(),
+      isFeatured: req.body.isFeatured === "true",
+      status: req.body.status || "draft",
+      image: imagePath
+    };
+
+    const post = new CurrentAffair(postData);
     await post.save();
-    res.status(201).json(post);
+
+    res.status(201).json({
+      message: "Current affair created successfully",
+      post
+    });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -141,8 +163,6 @@ exports.getCurrentAffairs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 // Get Single Blog Detail
 exports.getCurrentAffairBySlug = async (req, res) => {
