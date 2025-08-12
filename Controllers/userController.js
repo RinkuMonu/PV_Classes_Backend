@@ -38,7 +38,6 @@ exports.getOtp = async (req, res) => {
     res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
-
 exports.loginUser = async (req, res) => {
   try {
     const { number, otp } = req.body;
@@ -79,7 +78,6 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 exports.getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -100,7 +98,6 @@ exports.getUserData = async (req, res) => {
     });
   }
 };
-
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, state, district } = req.body; // form-data text fields
@@ -137,5 +134,47 @@ exports.updateUser = async (req, res) => {
   } catch (error) {
     console.error("Update User Error:", error);
     res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+exports.getAllUserData = async (req, res) => {
+  try {
+    const users = await User.find(); // fetch all users
+    if (!users.length) {
+      return res.status(404).json({ message: "No users found" });
+    }
+    return res.status(200).json({
+      message: "Users fetched successfully",
+      data: users,
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+exports.updateUserStatus = async (req, res) => {
+  try {
+    const { userId } = req.body; // or req.params.userId if you want
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Toggle status
+    user.status = user.status === "active" ? "inactive" : "active";
+
+    await user.save();
+
+    return res.status(200).json({
+      message: `User status updated to ${user.status}`,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };

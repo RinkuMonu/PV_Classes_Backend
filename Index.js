@@ -6,6 +6,8 @@ const connectDB = require("./Db/db");
 
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
+const CourseCategoryRoute = require("./Routes/CourseCategory");
+
 const categoriesRoute = require("./Routes/Category");
 const CoursesRoute = require("./Routes/course");
 const ExamTypeRoute = require("./Routes/examType");
@@ -24,13 +26,12 @@ app.use("/api/users", userRoute);
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
-
-
 app.use("/api/contacts", contactRoutes);
 app.use("/api/users", userRoute);
 app.use("/api/categories", categoriesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
+app.use("/api/course-category", CourseCategoryRoute);
 
 app.use("/api/courses", CoursesRoute);
 
