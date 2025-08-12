@@ -18,9 +18,10 @@ const bookCategoryRoutes = require("./Routes/bookCategoryRoutes");
 const bookSubCategoryRoutes = require("./Routes/BookSubCategory");
 const booksRoutes = require("./Routes/bookRoutes");
 const { default: bannerRoutes } = require("./Routes/Banner");
-
+const path = require("path");
 const app = express();
 app.use(cors());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // server.js
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
