@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const courseController = require("../Controllers/course");
 const upload = require("../middleware/upload");
-
+const uploadcourse = upload("course");
 // Middleware to set subFolder before upload
 function setCourseUploadFolder(req, res, next) {
     req.subFolder = "course"; // store in uploads/course
@@ -13,7 +13,7 @@ function setCourseUploadFolder(req, res, next) {
 router.post(
     "/",
     setCourseUploadFolder,
-    upload.single("courseImage"), // field name in form-data
+    uploadcourse.single("courseImage"), // field name in form-data
     courseController.createCourse
 );
 
@@ -27,7 +27,7 @@ router.get("/:id", courseController.getCourseById);
 router.put(
     "/:id",
     setCourseUploadFolder,
-    upload.single("courseImage"),
+    uploadcourse.single("courseImage"),
     courseController.updateCourse
 );
 

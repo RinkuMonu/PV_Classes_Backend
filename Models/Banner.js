@@ -39,10 +39,18 @@ const bannerSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true, // Adds createdAt and updatedAt timestamps
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
     }
 );
-
+bannerSchema.virtual("full_image").get(function () {
+    if (this.images) {
+        const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+        return `${baseUrl}/uploads/banner/${this.images}`;
+    }
+    return null;
+});
 const Banner = mongoose.model("banner", bannerSchema);
 
 export default Banner;
