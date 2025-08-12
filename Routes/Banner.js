@@ -15,12 +15,13 @@ import upload from "../middleware/upload.js";
 
 
 const bannerRoutes = express.Router();
+const uploadBanner = upload("banner");
 
 // Create a single banner (admin only)
 bannerRoutes.post(
     "/create",
 
-    upload.single('images'), // upload max 5 images
+    uploadBanner.single('images'), // upload max 5 images
     createBanner
 );
 
@@ -28,7 +29,7 @@ bannerRoutes.post(
 bannerRoutes.post(
     "/bulk-create",
 
-    upload.array('images', 5), // upload max 5 images
+    uploadBanner.array('images', 5), // upload max 5 images
     createMultipleBanners
 );
 bannerRoutes.get("/by-website-and-position", getBannersByWebsiteAndPosition);
@@ -45,7 +46,7 @@ bannerRoutes.get("/:id", getBannerDetail);
 bannerRoutes.put(
     "/:id",
 
-    upload.array("images", 5),
+    uploadBanner.array("images", 5),
     updateBanner
 );
 

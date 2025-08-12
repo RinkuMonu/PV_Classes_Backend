@@ -42,7 +42,13 @@ const bannerSchema = new mongoose.Schema(
         timestamps: true, // Adds createdAt and updatedAt timestamps
     }
 );
-
+bannerSchema.virtual("full_image").get(function () {
+    if (this.images) {
+        const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+        return `${baseUrl}/uploads/banner/${this.images}`;
+    }
+    return null;
+});
 const Banner = mongoose.model("banner", bannerSchema);
 
 export default Banner;
