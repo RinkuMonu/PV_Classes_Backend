@@ -18,7 +18,7 @@ exports.createBook = async (req, res) => {
 
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => file.path);
+      images = req.files.map((file) => file.filename);
     }
 
     const newBook = new Book({
@@ -53,12 +53,36 @@ exports.createBook = async (req, res) => {
 exports.getAllBooks = async (req, res) => {
   try {
     const books = await Book.find()
-      .populate("book_category_id", "name")
-      .populate("book_subcategory_id", "name");
+    .select("_id book_subcategory_id images tag book_title price discount_price")
+    .populate("book_subcategory_id", "name")
+    .lean({ virtuals: true });
+
+    const groupedBooks = books.reduce((acc, book) => {
+      const subCatId = book.book_subcategory_id._id.toString();
+      const subCatName = book.book_subcategory_id.name;
+
+      if (!acc[subCatId]) {
+        acc[subCatId] = {
+          book_subcategory_name: subCatName,
+          books: []
+        };
+      }
+
+      acc[subCatId].books.push({
+        _id: book._id,
+        images: book.images,
+        tag: book.tag,
+        book_title: book.book_title,
+        price: book.price,
+        discount_price: book.discount_price
+      });
+
+      return acc;
+    }, {});
 
     res.status(200).json({
       message: "Books fetched successfully",
-      data: books,
+      data: groupedBooks,   // <-- yahan groupedBooks bhejo, not raw books array
     });
   } catch (error) {
     res.status(500).json({
