@@ -7,11 +7,16 @@ const connectDB = require("./Db/db");
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
 const CourseCategoryRoute = require("./Routes/CourseCategory");
+const currentAffairRoutes = require("./Routes/currentAffairRoutes");
+
 
 const categoriesRoute = require("./Routes/Category");
 const CoursesRoute = require("./Routes/course");
 const ExamTypeRoute = require("./Routes/examType");
 const ExamRoute = require("./Routes/exam");
+
+
+
 const wishlistRoutes = require("./Routes/wishlist");
 const couponRoutes = require("./Routes/coupon");
 
@@ -38,6 +43,9 @@ app.use("/api/courses", CoursesRoute);
 
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/coupon", couponRoutes);
+
+
+app.use("/api/current-affairs", currentAffairRoutes);
 
 
 app.use((err, req, res, next) => {
