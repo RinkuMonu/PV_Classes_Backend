@@ -39,7 +39,9 @@ const bannerSchema = new mongoose.Schema(
         },
     },
     {
-        timestamps: true, // Adds createdAt and updatedAt timestamps
+        timestamps: true,
+        toJSON: { virtuals: true },
+        toObject: { virtuals: true }
     }
 );
 bannerSchema.virtual("full_image").get(function () {

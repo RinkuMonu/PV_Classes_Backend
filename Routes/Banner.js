@@ -45,7 +45,6 @@ bannerRoutes.get("/:id", getBannerDetail);
 // Update a banner (admin only)
 bannerRoutes.put(
     "/:id",
-
     uploadBanner.array("images", 5),
     updateBanner
 );
