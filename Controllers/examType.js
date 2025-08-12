@@ -52,3 +52,22 @@ exports.deleteExamType = async (req, res) => {
     res.status(500).json({ message: "Error deleting exam type", error: error.message });
   }
 };
+
+// Get exam types by category
+exports.getExamTypesByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params; // URL: /exam-types/category/:categoryId
+
+    const examTypes = await ExamType.find({ category: categoryId })
+      .populate("category")
+      .sort({ createdAt: -1 });
+
+    if (!examTypes.length) {
+      return res.status(404).json({ message: "No exam types found for this category" });
+    }
+
+    res.status(200).json(examTypes);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching exam types", error: error.message });
+  }
+};

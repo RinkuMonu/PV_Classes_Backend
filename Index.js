@@ -7,6 +7,7 @@ const connectDB = require("./Db/db");
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
 const CourseCategoryRoute = require("./Routes/CourseCategory");
+const CourseDetailRoute = require("./Routes/courseDetails");
 
 const categoriesRoute = require("./Routes/Category");
 const CoursesRoute = require("./Routes/course");
@@ -32,6 +33,7 @@ app.use("/api/categories", categoriesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
+app.use("/api/coursedetails", CourseDetailRoute);
 
 app.use("/api/courses", CoursesRoute);
 
