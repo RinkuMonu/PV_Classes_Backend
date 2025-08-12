@@ -19,4 +19,6 @@ router.put("/:id", examTypeController.updateExamType);
 // Delete
 router.delete("/:id", examTypeController.deleteExamType);
 
+
+
 module.exports = router;
