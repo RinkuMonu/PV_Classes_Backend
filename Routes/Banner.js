@@ -12,10 +12,10 @@ import {
 } from "../Controllers/Banner.js";
 import upload from "../middleware/upload.js";
 
-const uploadBanner = upload("banner");
 
 
 const bannerRoutes = express.Router();
+const uploadBanner = upload("banner");
 
 // Create a single banner (admin only)
 bannerRoutes.post(
