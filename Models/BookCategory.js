@@ -22,7 +22,10 @@ const BookCategorySchema = new mongoose.Schema(
       default: "active"
     }
   },
-  { timestamps: true }
+  { timestamps: true,
+    toJSON: { virtuals: true }, 
+    toObject: { virtuals: true }
+   }
 );
 BookCategorySchema.virtual("full_image").get(function () {
   if (this.image) {
