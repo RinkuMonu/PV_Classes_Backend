@@ -23,10 +23,10 @@ router.put(
   "/updateUser",
   auth,
   (req, res, next) => {
-    req.subFolder = "profile_image"; // Yeh folder uploads ke andar banega
+    req.subFolder = "profile_image"; // This will be inside /uploads/profile_image
     next();
   },
-  upload.single("profile_image"),
+  upload().single("profile_image"), // No default folder, uses req.subFolder
   updateUser
 );
 
