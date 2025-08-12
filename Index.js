@@ -14,11 +14,12 @@ const ExamTypeRoute = require("./Routes/examType");
 const ExamRoute = require("./Routes/exam");
 const wishlistRoutes = require("./Routes/wishlist");
 const couponRoutes = require("./Routes/coupon");
+const { default: bannerRoutes } = require("./Routes/Banner");
 
 const app = express();
 app.use(cors());
 // server.js
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 connectDB();
@@ -34,6 +35,7 @@ app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
 
 app.use("/api/courses", CoursesRoute);
+app.use("/api/banners", bannerRoutes);
 
 
 app.use("/api/wishlist", wishlistRoutes);
