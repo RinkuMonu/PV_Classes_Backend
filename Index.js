@@ -19,11 +19,16 @@ const ExamRoute = require("./Routes/exam");
 
 const wishlistRoutes = require("./Routes/wishlist");
 const couponRoutes = require("./Routes/coupon");
-
+const bookCategoryRoutes = require("./Routes/bookCategoryRoutes");
+const bookSubCategoryRoutes = require("./Routes/BookSubCategory");
+const booksRoutes = require("./Routes/bookRoutes");
+const { default: bannerRoutes } = require("./Routes/Banner");
+const path = require("path");
 const app = express();
 app.use(cors());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // server.js
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 connectDB();
@@ -38,12 +43,19 @@ app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
 
+app.use("/api/coursedetails", CourseDetailRoute);
+
+
+
 app.use("/api/courses", CoursesRoute);
+app.use("/api/banners", bannerRoutes);
 
 
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/coupon", couponRoutes);
-
+app.use("/api/book-categories", bookCategoryRoutes);
+app.use("/api/book-sub-categories",bookSubCategoryRoutes);
+app.use("/api/books",booksRoutes);
 
 app.use("/api/current-affairs", currentAffairRoutes);
 

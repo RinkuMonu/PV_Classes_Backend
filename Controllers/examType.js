@@ -53,7 +53,6 @@ exports.deleteExamType = async (req, res) => {
   }
 };
 
-
 // Get exam types by category
 exports.getExamTypesByCategory = async (req, res) => {
   try {
