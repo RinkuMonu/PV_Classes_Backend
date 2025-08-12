@@ -17,11 +17,12 @@ const couponRoutes = require("./Routes/coupon");
 const bookCategoryRoutes = require("./Routes/bookCategoryRoutes");
 const bookSubCategoryRoutes = require("./Routes/BookSubCategory");
 const booksRoutes = require("./Routes/bookRoutes");
+const { default: bannerRoutes } = require("./Routes/Banner");
 
 const app = express();
 app.use(cors());
 // server.js
-app.use(express.json()); 
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 connectDB();
@@ -36,6 +37,9 @@ app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
 app.use("/api/courses", CoursesRoute);
+app.use("/api/banners", bannerRoutes);
+
+
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/coupon", couponRoutes);
 app.use("/api/book-categories", bookCategoryRoutes);
