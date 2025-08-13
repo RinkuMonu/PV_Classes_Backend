@@ -38,7 +38,7 @@ exports.createCourse = async (req, res) => {
 // Get all courses with filters
 exports.getCourses = async (req, res) => {
   try {
-    const { title, type, status } = req.query;
+    const { title, type, status, viewAll } = req.query;
 
     let filter = {};
 
@@ -55,8 +55,18 @@ exports.getCourses = async (req, res) => {
       filter.status = status;
     }
 
-    const courses = await Course.find(filter);
+    let courses;
+
+    if (viewAll === "true") {
+      // Send all courses
+      courses = await Course.find(filter);
+    } else {
+      // Send only 5 courses
+      courses = await Course.find(filter).limit(5);
+    }
+
     res.status(200).json(courses);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
