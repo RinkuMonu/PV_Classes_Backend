@@ -1,4 +1,4 @@
-const TestSeries = require("../models/TestSeries");
+const TestSeries = require("../Models/TestSeries");
 // Create
 exports.createTestSeries = async (req, res) => {
   try {
