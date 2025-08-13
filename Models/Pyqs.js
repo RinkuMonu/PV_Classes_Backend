@@ -16,6 +16,12 @@ const PYQSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+    },
+    status: {
+        type: String,
+        enum: ["free", "paid"],
+        default: "free",
+        required: false
     }
 }, { timestamps: true });
 

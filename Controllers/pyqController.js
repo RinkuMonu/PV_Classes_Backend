@@ -5,10 +5,14 @@ const path = require("path");
 // Create PYQ
 exports.createPYQ = async (req, res) => {
     try {
-        const { exam, description } = req.body;
+        const { exam, description, status } = req.body;
 
         if (!exam || !description || !req.file) {
             return res.status(400).json({ message: "Exam, description, and PDF file are required" });
+        }
+
+        if (status && !["free", "paid"].includes(status)) {
+            return res.status(400).json({ message: "Status must be 'free' or 'paid'" });
         }
 
         const existing = await PYQ.findOne({ exam });
@@ -17,7 +21,12 @@ exports.createPYQ = async (req, res) => {
         }
 
         const pdfUrl = `uploads/pdf/${req.file.filename}`;
-        const pyq = new PYQ({ exam, description, pdfUrl });
+        const pyq = new PYQ({
+            exam,
+            description,
+            pdfUrl,
+            status: status || "free" // fallback to default
+        });
         await pyq.save();
 
         res.status(201).json(pyq);
@@ -65,7 +74,7 @@ exports.getPYQById = async (req, res) => {
 // Update PYQ
 exports.updatePYQ = async (req, res) => {
     try {
-        const { exam, description } = req.body;
+        const { exam, description, status } = req.body;
         const pyq = await PYQ.findById(req.params.id);
         if (!pyq) {
             return res.status(404).json({ message: "PYQ not found" });
@@ -73,6 +82,12 @@ exports.updatePYQ = async (req, res) => {
 
         if (exam) pyq.exam = exam;
         if (description) pyq.description = description;
+        if (status) {
+            if (!["free", "paid"].includes(status)) {
+                return res.status(400).json({ message: "Status must be 'free' or 'paid'" });
+            }
+            pyq.status = status;
+        }
 
         if (req.file) {
             if (pyq.pdfUrl) {
