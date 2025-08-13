@@ -21,6 +21,7 @@ const pyqRoutes = require("./Routes/pyqRoutes");
 const testSeriesRoutes = require("./Routes/testSeriesRoutes");
 
 // const cartRoutes = require("./Routes/cart");
+const cartRoutes = require("./Routes/cart");
 
 
 
@@ -58,6 +59,7 @@ app.use("/api/pyq", pyqRoutes);
 app.use("/api/test-series", testSeriesRoutes);
 
 // app.use("/api/cart", cartRoutes);
+app.use("/api/cart", cartRoutes);
 
 
 app.use((err, req, res, next) => {
