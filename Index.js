@@ -17,8 +17,8 @@ const couponRoutes = require("./Routes/coupon");
 const bookCategoryRoutes = require("./Routes/bookCategoryRoutes");
 const bookSubCategoryRoutes = require("./Routes/BookSubCategory");
 const booksRoutes = require("./Routes/bookRoutes");
-// const cartRoutes = require("./Routes/cartRoutes");
 const pyqRoutes = require("./Routes/pyqRoutes");
+// const cartRoutes = require("./Routes/cart");
 
 
 
@@ -52,8 +52,8 @@ app.use("/api/book-categories", bookCategoryRoutes);
 app.use("/api/book-sub-categories", bookSubCategoryRoutes);
 app.use("/api/books", booksRoutes);
 app.use("/api/current-affairs", currentAffairRoutes);
-// app.use("/api/current-affairs", cartRoutes);
 app.use("/api/pyq", pyqRoutes);
+// app.use("/api/cart", cartRoutes);
 
 
 app.use((err, req, res, next) => {
