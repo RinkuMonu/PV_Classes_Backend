@@ -46,6 +46,11 @@ const bookSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    language:{
+      type:String,
+      default:'hindi',
+      required:true
+    },
 
     // ✅ Key Features as array of objects
     book_key_features: [
@@ -63,7 +68,7 @@ const bookSchema = new mongoose.Schema(
 bookSchema.virtual("full_image").get(function () {
   if (Array.isArray(this.images) && this.images.length > 0) {
     const baseUrl = process.env.BASE_URL || "http://localhost:5000";
-    return this.images.map(img => `${baseUrl}/uploads/banner/${img}`);
+    return this.images.map(img => `${baseUrl}/uploads/book/${img}`);
   }
   return [];
 });

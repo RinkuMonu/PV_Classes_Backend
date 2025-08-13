@@ -14,6 +14,7 @@ exports.createBook = async (req, res) => {
       discount_price,
       stock,
       book_key_features,
+      language
     } = req.body;
 
     let images = [];
@@ -31,6 +32,7 @@ exports.createBook = async (req, res) => {
       price,
       discount_price,
       stock,
+      language,
     book_key_features: book_key_features ? JSON.parse(book_key_features) : [],
       images,
     });
@@ -52,33 +54,41 @@ exports.createBook = async (req, res) => {
 // ✅ Get All Books
 exports.getAllBooks = async (req, res) => {
   try {
-    const books = await Book.find()
-    .select("_id book_subcategory_id images tag book_title price discount_price")
-    .populate("book_subcategory_id", "name")
-    .lean({ virtuals: true });
+   const books = await Book.find()
+  .select("_id book_category_id book_subcategory_id images tag book_title price discount_price language")
+  .populate("book_category_id", "name full_image") // ✅ Category name + image
+  .populate("book_subcategory_id", "name") // ✅ Subcategory name
+  .lean({ virtuals: true });
 
-    const groupedBooks = books.reduce((acc, book) => {
-      const subCatId = book.book_subcategory_id._id.toString();
-      const subCatName = book.book_subcategory_id.name;
+const groupedBooks = books.reduce((acc, book) => {
+  const subCatId = book.book_subcategory_id._id.toString();
+  const subCatName = book.book_subcategory_id.name;
 
-      if (!acc[subCatId]) {
-        acc[subCatId] = {
-          book_subcategory_name: subCatName,
-          books: []
-        };
-      }
+  if (!acc[subCatId]) {
+    acc[subCatId] = {
+      book_subcategory_name: subCatName,
+      books: []
+    };
+  }
 
-      acc[subCatId].books.push({
-        _id: book._id,
-        images: book.images,
-        tag: book.tag,
-        book_title: book.book_title,
-        price: book.price,
-        discount_price: book.discount_price
-      });
+  acc[subCatId].books.push({
+    _id: book._id,
+    category: {
+      _id: book.book_category_id?._id,
+      name: book.book_category_id?.name,
+      full_image: book.book_category_id?.full_image
+    },
+    images: book.images,
+    tag: book.tag,
+    book_title: book.book_title,
+    price: book.price,
+    discount_price: book.discount_price,
+    language: book.language
+  });
 
-      return acc;
-    }, {});
+  return acc;
+}, {});
+
 
     res.status(200).json({
       message: "Books fetched successfully",
@@ -104,7 +114,8 @@ exports.getBookById = async (req, res) => {
 };
 exports.getBooksByCategoryId = async (req, res) => {
   try {
-    const books = await Book.find({ book_category_id: req.params.categoryId });
+    const books = await Book.find({ book_category_id: req.params.categoryId })
+  .populate('book_category_id', 'name');  // Populate only the category name
     if (!books || books.length === 0) {
       return res.status(404).json({ message: "No books found in this category" });
     }
@@ -127,6 +138,7 @@ exports.updateBook = async (req, res) => {
       discount_price,
       stock,
       book_key_features,
+      language,
     } = req.body;
 
     let updateData = {
@@ -139,6 +151,7 @@ exports.updateBook = async (req, res) => {
       price,
       discount_price,
       stock,
+      language,
       book_key_features: book_key_features
         ? book_key_features.split(",")
         : [],
