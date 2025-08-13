@@ -1,12 +1,12 @@
-// const express = require("express");
-// const router = express.Router();
-// const cartController = require("../Controllers/cart");
+const express = require("express");
+const router = express.Router();
+const cartController = require("../Controllers/cart");
 // const auth = require("../middleware/auth");
 
-// router.get("/", auth, cartController.getCart);
-// router.post("/add", auth, cartController.addToCart);
-// router.post("/remove", auth, cartController.removeFromCart);
-// router.post("/update", auth, cartController.updateQuantity);
-// router.post("/clear", auth, cartController.clearCart);
+router.get("/cart/:userId", cartController.getCart);
+router.post("/add", cartController.addToCart);
+router.post("/remove", cartController.removeFromCart);
+router.put("/update", cartController.updateQuantity);
+router.post("/clear", cartController.clearCart);
 
-// module.exports = router;
+module.exports = router;

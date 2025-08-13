@@ -18,7 +18,7 @@ const bookCategoryRoutes = require("./Routes/bookCategoryRoutes");
 const bookSubCategoryRoutes = require("./Routes/BookSubCategory");
 const booksRoutes = require("./Routes/bookRoutes");
 const pyqRoutes = require("./Routes/pyqRoutes");
-// const cartRoutes = require("./Routes/cart");
+const cartRoutes = require("./Routes/cart");
 
 
 
@@ -53,7 +53,7 @@ app.use("/api/book-sub-categories", bookSubCategoryRoutes);
 app.use("/api/books", booksRoutes);
 app.use("/api/current-affairs", currentAffairRoutes);
 app.use("/api/pyq", pyqRoutes);
-// app.use("/api/cart", cartRoutes);
+app.use("/api/cart", cartRoutes);
 
 
 app.use((err, req, res, next) => {
