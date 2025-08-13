@@ -63,8 +63,75 @@ exports.getApprovedReviews = async (req, res) => {
       .populate('user', 'name')
       .populate('course', 'title')
       .populate('coaching', 'name');
+      res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-    res.json(reviews);
+exports.getApprovedReviewsStats = async (req, res) => {
+  try {
+    // Aggregate reviews by course
+    const courseStats = await Review.aggregate([
+      { $match: { approved: true, course: { $ne: null } } }, // only approved and course reviews
+      {
+        $group: {
+          _id: "$course",
+          totalReviews: { $sum: 1 },
+          averageRating: { $avg: "$rating" },
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",        // collection name of courses
+          localField: "_id",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      { $unwind: "$course" },
+      {
+        $project: {
+          _id: 0,
+          courseId: "$course._id",
+          courseTitle: "$course.title",
+          totalReviews: 1,
+          averageRating: { $round: ["$averageRating", 2] }, // round to 2 decimals
+        },
+      },
+    ]);
+
+    // Aggregate reviews by coaching
+    const coachingStats = await Review.aggregate([
+      { $match: { approved: true, coaching: { $ne: null } } }, // only approved and coaching reviews
+      {
+        $group: {
+          _id: "$coaching",
+          totalReviews: { $sum: 1 },
+          averageRating: { $avg: "$rating" },
+        },
+      },
+      {
+        $lookup: {
+          from: "coachings",        // collection name of coachings
+          localField: "_id",
+          foreignField: "_id",
+          as: "coaching",
+        },
+      },
+      { $unwind: "$coaching" },
+      {
+        $project: {
+          _id: 0,
+          coachingId: "$coaching._id",
+          coachingName: "$coaching.name",
+          totalReviews: 1,
+          averageRating: { $round: ["$averageRating", 2] },
+        },
+      },
+    ]);
+
+    res.json({ courseStats, coachingStats });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
