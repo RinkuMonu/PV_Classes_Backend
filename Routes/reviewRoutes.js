@@ -7,4 +7,6 @@ const { protect, admin } = require('../middleware/protectMiddleware');
 router.post('/', protect, reviewController.addReview);
 router.put('/approve/:id', protect, admin, reviewController.approveReview);
 router.get('/', reviewController.getApprovedReviews);
+router.get('/review-details', reviewController.getApprovedReviewsStats);
+
 module.exports = router;
