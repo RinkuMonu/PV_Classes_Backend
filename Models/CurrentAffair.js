@@ -1,17 +1,18 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const mongoose = require("mongoose");
 
-const CurrentAffairSchema = new Schema({
+const CurrentAffairSchema = new mongoose.Schema({
   title: { type: String, required: true },
   slug: { type: String, required: true, unique: true },
-  category: { type: String, default: 'General' },
-  tags: [{ type: String }],
   content: { type: String, required: true },
+  excerpt: { type: String },
+  category: { type: mongoose.Schema.Types.ObjectId, ref: "CurrentAffairCategory", required: true },
   image: { type: String },
-  pdfLink: { type: String },
-  videoLink: { type: String },
-  publishedAt: { type: Date, default: Date.now },
-  author: { type: String, default: 'Utkarsh Team' }
+  tags: [{ type: String }],
+  publishDate: { type: Date, default: Date.now },
+  isFeatured: { type: Boolean, default: false },
+  status: { type: String, enum: ["draft", "published"], default: "draft" },
 }, { timestamps: true });
 
-module.exports = mongoose.model('CurrentAffair', CurrentAffairSchema);
+CurrentAffairSchema.index({ title: "text", content: "text", tags: "text" });
+
+module.exports = mongoose.model("CurrentAffair", CurrentAffairSchema);

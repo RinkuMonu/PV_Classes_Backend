@@ -55,7 +55,17 @@ const bookSchema = new mongoose.Schema(
       }
     ]
   },
-  { timestamps: true }
+  { timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
+bookSchema.virtual("full_image").get(function () {
+  if (Array.isArray(this.images) && this.images.length > 0) {
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+    return this.images.map(img => `${baseUrl}/uploads/banner/${img}`);
+  }
+  return [];
+});
 
 module.exports = mongoose.model("Book", bookSchema);
