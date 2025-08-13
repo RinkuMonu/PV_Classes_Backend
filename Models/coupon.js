@@ -9,7 +9,7 @@ const couponSchema = new mongoose.Schema({
     },
     discountType: {
         type: String,
-        enum: ["percentage", "flat"], // Percentage or flat discount
+        enum: ["percentage", "flat"],
         required: true
     },
     discountValue: {
@@ -18,7 +18,7 @@ const couponSchema = new mongoose.Schema({
     },
     maxDiscountAmount: {
         type: Number,
-        default: null // null means no limit
+        default: null
     },
     expiryDate: {
         type: Date,
@@ -29,7 +29,7 @@ const couponSchema = new mongoose.Schema({
         required: true
     },
     providerLogo: {
-        type: String, // URL to logo image
+        type: String,
         default: null
     },
     description: {
