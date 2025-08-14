@@ -9,7 +9,8 @@ const CourseSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   isFree: { type: Boolean, default: false },
   overview: { type: String },
-  image: { type: String }, 
+  image: { type: String },
+  videos: [String],
   status: { type: String, enum: ['active', 'inactive'], default: 'active' },
 }, { timestamps: true });
 

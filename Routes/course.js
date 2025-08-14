@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const courseController = require("../Controllers/course");
 const upload = require("../middleware/upload");
+const uploadVideo = require("../middleware/videoUpload"); // ✅ your Cloudinary video middleware
+
 const uploadcourse = upload("course");
+
 // Middleware to set subFolder before upload
 function setCourseUploadFolder(req, res, next) {
     req.subFolder = "course"; // store in uploads/course
@@ -13,7 +16,7 @@ function setCourseUploadFolder(req, res, next) {
 router.post(
     "/",
     setCourseUploadFolder,
-    uploadcourse.single("courseImage"), // field name in form-data
+    uploadcourse.single("courseImage"),
     courseController.createCourse
 );
 
@@ -33,5 +36,11 @@ router.put(
 
 // Delete course
 router.delete("/:id", courseController.deleteCourse);
+
+router.post(
+    "/:courseId/upload-video",
+    uploadVideo.single("video"),
+    courseController.uploadCourseVideo
+);
 
 module.exports = router;
