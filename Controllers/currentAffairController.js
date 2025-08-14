@@ -55,44 +55,7 @@ exports.createCurrentAffair = async (req, res) => {
   }
 };
 
-// Get All Blogs (with filters)
-// exports.getCurrentAffairs = async (req, res) => {
-//   try {
-//     const { category, search, latest, limit, status } = req.query;
-//     let filter = {};
 
-//     // Optional status filter
-//     if (status) {
-//       filter.status = status;
-//     }
-
-//     if (category) {
-//       const cat = await CurrentAffairCategory.findOne({ slug: category });
-//       if (cat) filter.category = cat._id;
-//     }
-
-//     if (search) {
-//       filter.$text = { $search: search };
-//     }
-
-//     let query = CurrentAffair.find(filter).populate("category", "name slug");
-
-//     if (latest === "true") {
-//       query = query.sort({ publishDate: -1 });
-//     } else {
-//       query = query.sort({ createdAt: -1 });
-//     }
-
-//     if (limit) {
-//       query = query.limit(Number(limit));
-//     }
-
-//     const posts = await query.exec();
-//     res.json(posts);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 
 // Get All Blogs (with advanced filters)
 exports.getCurrentAffairs = async (req, res) => {
@@ -125,7 +88,7 @@ exports.getCurrentAffairs = async (req, res) => {
     if (tags) {
       const tagsArray = tags.split(",").map(tag => tag.trim().toLowerCase());
       filter.tags = { 
-        $in: tagsArray.map(tag => new RegExp(`^${tag}$`, "i")) 
+        $in: tagsArray.map(tag => new RegExp(`^${tag}$`, "i"))
       };
     }
 
@@ -163,6 +126,7 @@ exports.getCurrentAffairs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Get Single Blog Detail
 exports.getCurrentAffairBySlug = async (req, res) => {
