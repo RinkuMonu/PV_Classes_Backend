@@ -4,20 +4,16 @@ exports.createCourse = async (req, res) => {
   try {
     const { title, slug, exam, type, price, isFree, overview, status } = req.body;
 
-    let courseData = {
-      title,
-      slug,
-      exam,
-      type,
-      price,
-      isFree,
-      overview,
-      status
-    };
+    let courseData = { title, slug, exam, type, price, isFree, overview, status };
 
-    // If file uploaded, add image path
-    if (req.file) {
-      courseData.image = `/uploads/course/${req.file.filename}`;
+    // Image
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      courseData.image = req.files.image[0].path; // Cloudinary URL
+    }
+
+    // Videos
+    if (req.files && req.files.videos && req.files.videos.length > 0) {
+      courseData.videos = req.files.videos.map(file => file.path); // Array of URLs
     }
 
     const newCourse = new Course(courseData);
@@ -157,5 +153,50 @@ exports.deleteCourse = async (req, res) => {
     res.status(200).json({ message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting course", error: error.message });
+  }
+};
+
+exports.uploadCourseVideo = async (req, res) => {
+  try {
+    const { title, description, order, duration } = req.body;
+    const courseId = req.params.courseId;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No video file uploaded" });
+    }
+
+    // Cloudinary URL (after multer or cloudinary upload middleware)
+    const videoUrl = req.file.path;
+
+    // Find course
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Push new video object
+    course.videos.push({
+      title: title || `Part ${course.videos.length + 1}`,
+      url: videoUrl,
+      description: description || "",
+      duration: duration ? Number(duration) : null,
+      order: order ? Number(order) : course.videos.length + 1
+    });
+
+    // Sort videos by order before saving
+    course.videos.sort((a, b) => a.order - b.order);
+
+    await course.save();
+
+    res.status(200).json({
+      message: "Video uploaded successfully",
+      video: course.videos[course.videos.length - 1],
+      course
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Video upload failed",
+      error: error.message
+    });
   }
 };
