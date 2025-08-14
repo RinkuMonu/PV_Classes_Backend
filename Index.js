@@ -26,7 +26,7 @@ const cartRoutes = require("./Routes/cart");
 
 
 const path = require("path");
-const { default: bannerRoutes } = require("./Routes/Banner");
+const bannerRoutes  = require("./Routes/Banner");
 const CourseDetailRoute = require("./Routes/courseDetails");
 const app = express();
 app.use(cors());

@@ -34,6 +34,9 @@ exports.createCourse = async (req, res) => {
     });
   }
 };
+
+
+
 // Get all courses with filters
 // exports.getCourses = async (req, res) => {
 //   try {
@@ -72,6 +75,7 @@ exports.createCourse = async (req, res) => {
 // };
 
 // Get all courses with filters
+
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
