@@ -39,7 +39,7 @@ router.delete("/:id", courseController.deleteCourse);
 
 router.post(
     "/:courseId/upload-video",
-    uploadVideo.single("video"),
+    uploadVideo.single("url"),
     courseController.uploadCourseVideo
 );
 

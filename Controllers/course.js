@@ -158,32 +158,39 @@ exports.deleteCourse = async (req, res) => {
 
 exports.uploadCourseVideo = async (req, res) => {
   try {
+    const { title, description, order, duration } = req.body;
     const courseId = req.params.courseId;
 
     if (!req.file) {
       return res.status(400).json({ message: "No video file uploaded" });
     }
 
-    // Cloudinary URL
+    // Cloudinary URL (after multer or cloudinary upload middleware)
     const videoUrl = req.file.path;
 
-    // Optionally: Save video URL to course in DB
+    // Find course
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // If you want multiple videos
-    if (!course.videos) {
-      course.videos = [];
-    }
-    course.videos.push(videoUrl);
+    // Push new video object
+    course.videos.push({
+      title: title || `Part ${course.videos.length + 1}`,
+      url: videoUrl,
+      description: description || "",
+      duration: duration ? Number(duration) : null,
+      order: order ? Number(order) : course.videos.length + 1
+    });
+
+    // Sort videos by order before saving
+    course.videos.sort((a, b) => a.order - b.order);
 
     await course.save();
 
     res.status(200).json({
       message: "Video uploaded successfully",
-      videoUrl,
+      video: course.videos[course.videos.length - 1],
       course
     });
   } catch (error) {
