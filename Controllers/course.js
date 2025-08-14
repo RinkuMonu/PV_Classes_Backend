@@ -34,6 +34,9 @@ exports.createCourse = async (req, res) => {
     });
   }
 };
+
+
+
 // Get all courses with filters
 // exports.getCourses = async (req, res) => {
 //   try {
@@ -72,6 +75,7 @@ exports.createCourse = async (req, res) => {
 // };
 
 // Get all courses with filters
+
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
@@ -143,38 +147,50 @@ exports.deleteCourse = async (req, res) => {
 
 exports.uploadCourseVideo = async (req, res) => {
   try {
-    const { title, description, order, duration } = req.body;
+    const { title, description, order, duration, youtubeUrl } = req.body;
     const courseId = req.params.courseId;
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No video file uploaded" });
-    }
-
-    // Cloudinary URL (after multer or cloudinary upload middleware)
-    const videoUrl = req.file.path;
-
-    // Find course
+    // Course find karein
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Push new video object
+    // Video ka final URL decide karein
+    let videoUrl = null;
+    let sourceType = null; // optional: track karein kis source ka video hai
+
+    if (req.file) {
+      // Agar admin ne file upload ki hai → Cloudinary ka URL save karein
+      videoUrl = req.file.path;
+      sourceType = "cloudinary";
+    } else if (youtubeUrl) {
+      // Agar file nahi hai lekin YouTube URL hai → YouTube ka URL save karein
+      videoUrl = youtubeUrl;
+      sourceType = "youtube";
+    }
+
+    if (!videoUrl) {
+      return res.status(400).json({ message: "Please upload a video or provide a YouTube URL" });
+    }
+
+    // New video object push karein
     course.videos.push({
       title: title || `Part ${course.videos.length + 1}`,
       url: videoUrl,
       description: description || "",
       duration: duration ? Number(duration) : null,
-      order: order ? Number(order) : course.videos.length + 1
+      order: order ? Number(order) : course.videos.length + 1,
+      sourceType // optional field
     });
 
-    // Sort videos by order before saving
+    // Order ke according sort karein
     course.videos.sort((a, b) => a.order - b.order);
 
     await course.save();
 
     res.status(200).json({
-      message: "Video uploaded successfully",
+      message: "Video added successfully",
       video: course.videos[course.videos.length - 1],
       course
     });
