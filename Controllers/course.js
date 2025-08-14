@@ -15,9 +15,9 @@ exports.createCourse = async (req, res) => {
       status
     };
 
-    // If file uploaded, add image path
-    if (req.file) {
-      courseData.image = `/uploads/course/${req.file.filename}`;
+    // Agar multiple files upload hui hain
+    if (req.files && req.files.length > 0) {
+      courseData.images = req.files.map(file => `${file.filename}`);
     }
 
     const newCourse = new Course(courseData);
@@ -34,7 +34,6 @@ exports.createCourse = async (req, res) => {
     });
   }
 };
-
 // Get all courses with filters
 // exports.getCourses = async (req, res) => {
 //   try {
@@ -79,35 +78,17 @@ exports.getCourses = async (req, res) => {
 
     let filter = {};
 
-    // Search by title (case-insensitive)
-    if (title) {
-      filter.title = { $regex: title, $options: "i" };
-    }
+    if (title) filter.title = { $regex: title, $options: "i" };
+    if (exam) filter.exam = exam;
+    if (type) filter.type = type;
+    if (status) filter.status = status;
 
-    // Filter by exam ID
-    if (exam) {
-      filter.exam = exam;
-    }
+    let query = Course.find(filter);
+    if (viewAll !== "true") query = query.limit(5);
 
-    // Optional filters
-    if (type) {
-      filter.type = type;
-    }
-    if (status) {
-      filter.status = status;
-    }
-
-    let courses;
-
-    if (viewAll === "true") {
-      // Send all courses
-      courses = await Course.find(filter);
-    } else {
-      // Send only 5 courses
-      courses = await Course.find(filter).limit(5);
-    }
-
+    const courses = await query;
     res.status(200).json(courses);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

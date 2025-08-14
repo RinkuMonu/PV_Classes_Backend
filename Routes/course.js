@@ -13,7 +13,7 @@ function setCourseUploadFolder(req, res, next) {
 router.post(
     "/",
     setCourseUploadFolder,
-    uploadcourse.single("courseImage"), // field name in form-data
+    uploadcourse.array("images",5), // field name in form-data
     courseController.createCourse
 );
 
