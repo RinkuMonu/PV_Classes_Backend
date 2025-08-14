@@ -36,15 +36,57 @@ exports.createCourse = async (req, res) => {
 };
 
 // Get all courses with filters
+// exports.getCourses = async (req, res) => {
+//   try {
+//     const { title, type, status, viewAll } = req.query;
+
+//     let filter = {};
+
+//     // Search by title (case-insensitive)
+//     if (title) {
+//       filter.title = { $regex: title, $options: "i" };
+//     }
+
+//     // Optional filters
+//     if (type) {
+//       filter.type = type;
+//     }
+//     if (status) {
+//       filter.status = status;
+//     }
+
+//     let courses;
+
+//     if (viewAll === "true") {
+//       // Send all courses
+//       courses = await Course.find(filter);
+//     } else {
+//       // Send only 5 courses
+//       courses = await Course.find(filter).limit(5);
+//     }
+
+//     res.status(200).json(courses);
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+// Get all courses with filters
 exports.getCourses = async (req, res) => {
   try {
-    const { title, type, status, viewAll } = req.query;
+    const { title, type, status, viewAll, exam } = req.query;
 
     let filter = {};
 
     // Search by title (case-insensitive)
     if (title) {
       filter.title = { $regex: title, $options: "i" };
+    }
+
+    // Filter by exam ID
+    if (exam) {
+      filter.exam = exam;
     }
 
     // Optional filters
@@ -66,11 +108,11 @@ exports.getCourses = async (req, res) => {
     }
 
     res.status(200).json(courses);
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Get course by ID
 exports.getCourseById = async (req, res) => {
