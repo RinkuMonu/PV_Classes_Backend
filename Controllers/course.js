@@ -4,20 +4,16 @@ exports.createCourse = async (req, res) => {
   try {
     const { title, slug, exam, type, price, isFree, overview, status } = req.body;
 
-    let courseData = {
-      title,
-      slug,
-      exam,
-      type,
-      price,
-      isFree,
-      overview,
-      status
-    };
+    let courseData = { title, slug, exam, type, price, isFree, overview, status };
 
-    // If file uploaded, add image path
-    if (req.file) {
-      courseData.image = `/uploads/course/${req.file.filename}`;
+    // Image
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      courseData.image = req.files.image[0].path; // Cloudinary URL
+    }
+
+    // Videos
+    if (req.files && req.files.videos && req.files.videos.length > 0) {
+      courseData.videos = req.files.videos.map(file => file.path); // Array of URLs
     }
 
     const newCourse = new Course(courseData);
@@ -157,5 +153,43 @@ exports.deleteCourse = async (req, res) => {
     res.status(200).json({ message: "Course deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting course", error: error.message });
+  }
+};
+
+exports.uploadCourseVideo = async (req, res) => {
+  try {
+    const courseId = req.params.courseId;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No video file uploaded" });
+    }
+
+    // Cloudinary URL
+    const videoUrl = req.file.path;
+
+    // Optionally: Save video URL to course in DB
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // If you want multiple videos
+    if (!course.videos) {
+      course.videos = [];
+    }
+    course.videos.push(videoUrl);
+
+    await course.save();
+
+    res.status(200).json({
+      message: "Video uploaded successfully",
+      videoUrl,
+      course
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Video upload failed",
+      error: error.message
+    });
   }
 };
