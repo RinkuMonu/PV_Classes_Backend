@@ -4,49 +4,51 @@ const crypto = require("crypto"); // optional for randomness
 
 exports.getOtp = async (req, res) => {
   try {
-    const { number, referral_code } = req.body;
+    const { phone, referral_code } = req.body;
 
-    if (!number) {
+    if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    let user = await User.findOne({ number }); // let use karo
-    if (!user) {
-      user = new User({ number }); // directly number pass karo
-    }
+    const otp = Math.floor(10000 + Math.random() * 90000); // integer OTP
 
-    const otp = Math.floor(10000 + Math.random() * 90000).toString();
-    user.otp = otp;
+    // Build update data
+    const updateData = { phone, otp };
+    if (referral_code) updateData.referral_code = referral_code;
 
-    if (referral_code) {
-      user.referral_code = referral_code;
-    }
-
-    await user.save();
+    // Update or create user
+    const user = await User.findOneAndUpdate(
+      { phone },
+      { $set: updateData },
+      { new: true, upsert: true }
+    );
 
     res.status(200).json({
       message: "OTP sent successfully",
       data: {
-        number: user.number,
+        phone: user.phone,
         referral_code: user.referral_code || null,
-        otp: otp
+        otp
       }
     });
 
   } catch (error) {
     console.error("Get OTP Error:", error);
-    res.status(500).json({ message: "Internal server error", error: error.message });
+    res.status(500).json({
+      message: "Internal server error",
+      error: error.message,
+    });
   }
 };
 exports.loginUser = async (req, res) => {
   try {
-    const { number, otp } = req.body;
-
-    if (!number || !otp) {
+    const { phone, otp } = req.body;
+    console.log("req.body =",req.body);
+    if (!phone || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
 
-    const user = await User.findOne({ number });
+    const user = await User.findOne({ phone });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -64,13 +66,14 @@ exports.loginUser = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, number: user.number },
+      { id: user._id, phone: user.phone },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
     res.status(200).json({
       message: "Login successful",
       token,
+      userId:user._id
     });
 
   } catch (error) {
