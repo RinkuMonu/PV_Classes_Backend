@@ -21,8 +21,7 @@
 //     }
 
 //     const newCourse = new Course(courseData);
-//     await newCourse.save();
-
+//     await newCourse.save()
 //     res.status(201).json({
 //       message: "Course created successfully",
 //       course: newCourse
@@ -72,6 +71,23 @@
 // // };
 
 // // Get all courses with filters
+// =======
+//     res.status(201).json({
+//       message: "Course created successfully",
+//       course: newCourse
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       message: "Error creating course",
+//       error: error.message
+//     });
+//   }
+// };
+
+
+
+// Get all courses with filters
+
 // exports.getCourses = async (req, res) => {
 //   try {
 //     const { title, type, status, viewAll, exam } = req.query;
@@ -202,6 +218,7 @@
 
 
 
+
 const Course = require("../Models/Course");
 
 // 📌 Create Course
@@ -238,7 +255,6 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-// 📌 Get Courses with filters
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
