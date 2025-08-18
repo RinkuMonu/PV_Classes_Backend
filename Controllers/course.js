@@ -358,7 +358,7 @@ exports.updateCourseVideo = async (req, res) => {
     if (typeof isFree !== "undefined") video.isFree = isFree === "true" || isFree === true;
 
     // Sort by order after update
-    course.videos.sort((a, b) => a.order - b.order);
+    course.videos.sort((a, b) => a.order - b.order); 
 
     await course.save();
 
