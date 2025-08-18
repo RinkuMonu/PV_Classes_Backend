@@ -96,40 +96,106 @@ exports.getCart = async (req, res) => {
     });
   }
 };
+exports.getStorageCart = async (req, res) => {
+  try {
+    // parse cart data from query
+    const items = JSON.parse(req.query.items || "[]");
+
+    if (!items.length) {
+      return res.status(200).json({
+        success: true,
+        message: "Cart is empty",
+        cart: { items: [] },
+      });
+    }
+
+    // Populate items based on type
+    const populatedItems = await Promise.all(
+      items.map(async (item) => {
+        let productData = null;
+
+        if (item.itemType === "course") {
+          productData = await Course.findById(item.itemId)
+            .populate("category_id")
+            .lean();
+        } else if (item.itemType === "book") {
+          productData = await Book.findById(item.itemId)
+            .populate("book_category_id")
+            .lean();
+        } else if (item.itemType === "testSeries") {
+          productData = await TestSeries.findById(item.itemId).lean();
+        } else if (item.itemType === "pyq") {
+          productData = await PYQ.findById(item.itemId).lean();
+        }
+
+        return {
+          ...item,
+          details: productData,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Cart fetched successfully",
+      cart: { items: populatedItems },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching cart",
+      error: error.message,
+    });
+  }
+};
 
 exports.addToCart = async (req, res) => {
   try {
-    const { itemType, itemId } = req.body;
+    const { itemType, itemId, quantity } = req.body;
     const userId = req.user.id;
+
     if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
     }
+
+    // find existing cart for user
     let cart = await Cart.findOne({ user: userId });
+
     if (!cart) {
+      // agar pehli baar user ka cart ban raha hai
       cart = new Cart({
         user: userId,
-        items: [{ itemType, itemId, quantity: 1 }],
+        items: [{ itemType, itemId, quantity: quantity || 1 }],
       });
     } else {
+      // check if item already exists inside items
       const existingItem = cart.items.find(
         (item) =>
           item.itemType === itemType &&
           item.itemId.toString() === itemId.toString()
       );
+
       if (existingItem) {
-        existingItem.quantity += 1;
+        // agar item already hai to quantity badhao
+        existingItem.quantity += quantity || 1;
       } else {
-        cart.items.push({ itemType, itemId, quantity: 1 });
+        // warna new item push karo
+        cart.items.push({ itemType, itemId, quantity: quantity || 1 });
       }
     }
+
     await cart.save();
-    res.status(200).json({
+
+    return res.status(200).json({
       success: true,
       message: "Item added to cart",
       cart,
     });
   } catch (error) {
-    res.status(500).json({
+    console.error("Add to Cart Error:", error);
+    return res.status(500).json({
       success: false,
       message: "Error adding to cart",
       error: error.message,
@@ -177,9 +243,6 @@ exports.removeFromCart = async (req, res) => {
     });
   }
 };
-
-
-
 exports.updateQuantity = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -212,7 +275,6 @@ exports.updateQuantity = async (req, res) => {
     });
   }
 };
-
 
 exports.clearCart = async (req, res) => {
     try {
