@@ -174,16 +174,15 @@ const Course = require("../Models/Course");
 exports.createCourse = async (req, res) => {
   try {
     const {
-      title, slug, exam, type, author, language, rating,
-      learnersCount, mainMotive, topics, features,
-      price, discount_price, isFree, validity, overview,
+      title, slug, exam, type, author, language, mainMotive, topics, features,
+      price, discount_price, isFree, validity,
       shortDescription, longDescription, status
     } = req.body;
 
     let courseData = {
-      title, slug, exam, type, author, language, rating,
-      learnersCount, mainMotive, price, discount_price,
-      isFree, validity, overview, shortDescription,
+      title, slug, exam, type, author, language,
+      mainMotive, price, discount_price,
+      isFree, validity, shortDescription,
       longDescription, status
     };
 
@@ -214,7 +213,7 @@ exports.getCourses = async (req, res) => {
     if (type) filter.type = type;
     if (status) filter.status = status;
 
-    let query = Course.find(filter).populate("exam");
+    let query = Course.find(filter).populate("exam").populate("author", "name experience profile_image_url specialization");
     if (viewAll !== "true") query = query.limit(5);
 
     const courses = await query;
@@ -227,7 +226,7 @@ exports.getCourses = async (req, res) => {
 // 📌 Get Course by ID
 exports.getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("exam");
+    const course = await Course.findById(req.params.id).populate("exam").populate("author", "name experience profile_image_url specialization");;
     if (!course) return res.status(404).json({ message: "Course not found" });
     res.status(200).json(course);
   } catch (error) {
