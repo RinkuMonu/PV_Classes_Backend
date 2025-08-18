@@ -16,7 +16,7 @@ function setCourseUploadFolder(req, res, next) {
 router.post(
     "/",
     setCourseUploadFolder,
-    uploadcourse.array("images",5), // field name in form-data
+    uploadcourse.array("images", 5), // field name in form-data
     courseController.createCourse
 );
 
@@ -41,6 +41,11 @@ router.post(
     "/:courseId/upload-video",
     uploadVideo.single("url"),
     courseController.uploadCourseVideo
+);
+router.put(
+    "/:courseId/update-videos/:videoId",
+    uploadVideo.single("url"),
+    courseController.updateCourseVideo
 );
 
 module.exports = router;
