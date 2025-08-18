@@ -20,9 +20,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       enum: ["user", "teacher", "admin"],
       default: "user"
-    }
+    },
+    experience: { type: String },
+    specialization: { type: String }
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

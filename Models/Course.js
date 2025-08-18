@@ -1,32 +1,56 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const VideoSchema = new mongoose.Schema({
-  title: { type: String, required: true }, 
-  url: { type: String, required: true },  
-  description: { type: String },           
-  duration: { type: Number },             
-  order: { type: Number, required: true }, 
-}, { _id: false });
+// 🎬 Video Schema
+const VideoSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    url: { type: String, required: true },
+    shortDescription: { type: String },
+    longDescription: { type: String },
+    duration: { type: Number },
+    order: { type: Number, required: true, unique: true },
+    isFree: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
 
-const CourseSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
-  exam: { type: mongoose.Schema.Types.ObjectId, ref: 'Exam', required: true },
-  type: { type: String, enum: ['Test Series', 'Course'], required: true },
-  price: { type: Number, default: 0 },
-  discount_price: { type: Number, default: 0 },
-  isFree: { type: Boolean, default: false },
-  validity:{type:String},
-  overview: { type: String },
-  images: [{ type: String }], 
-  videos: [VideoSchema],
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
-}, { timestamps: true });
 
-CourseSchema.virtual('imagesFullPath').get(function () {
+const CourseSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
+    type: { type: String, enum: ["Test Series", "Course"], required: true },
+    price: { type: Number, default: 0 },
+    discountPrice: { type: Number, default: 0 },
+    isFree: { type: Boolean, default: false },
+    validity: { type: String },
+    lastUpdated: { type: Date, default: Date.now },
+    language: { type: String, default: "English" },
+    rating: { type: Number, default: 0 },
+    learnersCount: { type: Number, default: 0 },
+    shortDescription: { type: String },
+    longDescription: { type: String },
+    mainMotive: { type: String },
+    topics: [{ type: String }],
+    features: [{ type: String }],
+    images: [{ type: String }],
+    videos: [VideoSchema],
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+  },
+  { timestamps: true }
+);
+
+CourseSchema.virtual("imagesFullPath").get(function () {
   if (!this.images) return [];
-  return this.images.map(img => `${process.env.BASE_URL}/uploads/course/${img}`);
+  return this.images.map(
+    (img) => `${process.env.BASE_URL}/uploads/course/${img}`
+  );
 });
-CourseSchema.set('toJSON', { virtuals: true });
-CourseSchema.set('toObject', { virtuals: true });
-module.exports = mongoose.model('Course', CourseSchema);
+
+
+CourseSchema.set("toJSON", { virtuals: true });
+CourseSchema.set("toObject", { virtuals: true });
+
+module.exports = mongoose.model("Course", CourseSchema);
