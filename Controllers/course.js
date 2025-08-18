@@ -21,57 +21,8 @@
 //     }
 
 //     const newCourse = new Course(courseData);
-//     await newCourse.save()
-//     res.status(201).json({
-//       message: "Course created successfully",
-//       course: newCourse
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Error creating course",
-//       error: error.message
-//     });
-//   }
-// };
-// // Get all courses with filters
-// // exports.getCourses = async (req, res) => {
-// //   try {
-// //     const { title, type, status, viewAll } = req.query;
+//     await newCourse.save();
 
-// //     let filter = {};
-
-// //     // Search by title (case-insensitive)
-// //     if (title) {
-// //       filter.title = { $regex: title, $options: "i" };
-// //     }
-
-// //     // Optional filters
-// //     if (type) {
-// //       filter.type = type;
-// //     }
-// //     if (status) {
-// //       filter.status = status;
-// //     }
-
-// //     let courses;
-
-// //     if (viewAll === "true") {
-// //       // Send all courses
-// //       courses = await Course.find(filter);
-// //     } else {
-// //       // Send only 5 courses
-// //       courses = await Course.find(filter).limit(5);
-// //     }
-
-// //     res.status(200).json(courses);
-
-// //   } catch (error) {
-// //     res.status(500).json({ error: error.message });
-// //   }
-// // };
-
-// // Get all courses with filters
-// =======
 //     res.status(201).json({
 //       message: "Course created successfully",
 //       course: newCourse
@@ -87,7 +38,6 @@
 
 
 // Get all courses with filters
-
 // exports.getCourses = async (req, res) => {
 //   try {
 //     const { title, type, status, viewAll, exam } = req.query;
@@ -225,16 +175,15 @@ const Course = require("../Models/Course");
 exports.createCourse = async (req, res) => {
   try {
     const {
-      title, slug, exam, type, author, language, rating,
-      learnersCount, mainMotive, topics, features,
-      price, discount_price, isFree, validity, overview,
+      title, slug, exam, type, author, language, mainMotive, topics, features,
+      price, discount_price, isFree, validity,
       shortDescription, longDescription, status
     } = req.body;
 
     let courseData = {
-      title, slug, exam, type, author, language, rating,
-      learnersCount, mainMotive, price, discount_price,
-      isFree, validity, overview, shortDescription,
+      title, slug, exam, type, author, language,
+      mainMotive, price, discount_price,
+      isFree, validity, shortDescription,
       longDescription, status
     };
 
@@ -265,7 +214,7 @@ exports.getCourses = async (req, res) => {
     if (type) filter.type = type;
     if (status) filter.status = status;
 
-    let query = Course.find(filter).populate("exam");
+    let query = Course.find(filter).populate("exam").populate("author", "name experience profile_image_url specialization");
     if (viewAll !== "true") query = query.limit(5);
 
     const courses = await query;
@@ -278,7 +227,7 @@ exports.getCourses = async (req, res) => {
 // 📌 Get Course by ID
 exports.getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("exam");
+    const course = await Course.findById(req.params.id).populate("exam").populate("author", "name experience profile_image_url specialization");;
     if (!course) return res.status(404).json({ message: "Course not found" });
     res.status(200).json(course);
   } catch (error) {
@@ -409,7 +358,7 @@ exports.updateCourseVideo = async (req, res) => {
     if (typeof isFree !== "undefined") video.isFree = isFree === "true" || isFree === true;
 
     // Sort by order after update
-    course.videos.sort((a, b) => a.order - b.order);
+    course.videos.sort((a, b) => a.order - b.order); 
 
     await course.save();
 
