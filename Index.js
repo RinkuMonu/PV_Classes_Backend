@@ -23,6 +23,7 @@ const reviewRoutes = require("./Routes/reviewRoutes");
 // const cartRoutes = require("./Routes/cart");
 const cartRoutes = require("./Routes/cart");
 const comboRoutes = require("./Routes/comboRoutes");
+const accessRoutes = require("./Routes/accessRoutes");
 
 
 
@@ -66,7 +67,7 @@ app.use("/api/combo", comboRoutes);
 // app.use("/api/cart", cartRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout",checkoutRouter);
-
+app.use("/api/access", accessRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
