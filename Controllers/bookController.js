@@ -8,7 +8,7 @@ exports.createBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag,
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -27,7 +27,7 @@ exports.createBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag: tag ? tag.split(",") : [],
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -54,45 +54,49 @@ exports.createBook = async (req, res) => {
 // ✅ Get All Books
 exports.getAllBooks = async (req, res) => {
   try {
-   const books = await Book.find()
-  .select("_id book_category_id book_subcategory_id images tag book_title price discount_price language")
-  .populate("book_category_id", "name full_image") // ✅ Category name + image
-  .populate("book_subcategory_id", "name") // ✅ Subcategory name
-  .lean({ virtuals: true });
+    const books = await Book.find()
+      .select("_id book_category_id book_subcategory_id images tag title price discount_price language")
+      .populate("book_category_id", "name full_image")
+      .populate("book_subcategory_id", "name");
 
-const groupedBooks = books.reduce((acc, book) => {
-  const subCatId = book.book_subcategory_id._id.toString();
-  const subCatName = book.book_subcategory_id.name;
+    // Convert mongoose docs to plain JSON
+    const booksJson = books.map((book) => book.toJSON());
 
-  if (!acc[subCatId]) {
-    acc[subCatId] = {
-      book_subcategory_name: subCatName,
-      books: []
-    };
-  }
+    const groupedBooks = booksJson.reduce((acc, book) => {
+      const subCatId = book.book_subcategory_id?._id?.toString();
+      const subCatName = book.book_subcategory_id?.name;
 
-  acc[subCatId].books.push({
-    _id: book._id,
-    category: {
-      _id: book.book_category_id?._id,
-      name: book.book_category_id?.name,
-      full_image: book.book_category_id?.full_image
-    },
-    images: book.images,
-    tag: book.tag,
-    book_title: book.book_title,
-    price: book.price,
-    discount_price: book.discount_price,
-    language: book.language
-  });
+      if (!subCatId) return acc; // safeguard
 
-  return acc;
-}, {});
+      if (!acc[subCatId]) {
+        acc[subCatId] = {
+          book_subcategory_id: subCatId,
+          book_subcategory_name: subCatName,
+          books: []
+        };
+      }
 
+      acc[subCatId].books.push({
+        _id: book._id,
+        category: {
+          _id: book.book_category_id?._id,
+          name: book.book_category_id?.name,
+          full_image: book.book_category_id?.full_image
+        },
+        images: book.images,
+        tag: book.tag,
+        title: book.title,
+        price: book.price,
+        discount_price: book.discount_price,
+        language: book.language
+      });
+
+      return acc;
+    }, {});
 
     res.status(200).json({
       message: "Books fetched successfully",
-      data: groupedBooks,   // <-- yahan groupedBooks bhejo, not raw books array
+      data: groupedBooks,
     });
   } catch (error) {
     res.status(500).json({
@@ -101,6 +105,7 @@ const groupedBooks = books.reduce((acc, book) => {
     });
   }
 };
+
 exports.getBookById = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -132,7 +137,7 @@ exports.updateBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag,
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -146,7 +151,7 @@ exports.updateBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag: tag ? tag.split(",") : [],
-      book_title,
+      title,
       book_description,
       price,
       discount_price,

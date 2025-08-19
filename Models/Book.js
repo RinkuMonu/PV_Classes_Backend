@@ -25,7 +25,7 @@ const bookSchema = new mongoose.Schema(
       type: [String], // multiple tags
       default: [],
     },
-    book_title: {
+    title: {
       type: String,
       required: true,
       trim: true,
