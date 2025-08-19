@@ -24,7 +24,7 @@ exports.checkout = async (req, res) => {
                 $or: [
                     { "courses.course": { $in: courseIds } },
                     { "books.book": { $in: bookIds } },
-                    { "testSeries.testSeries": { $in: testSeriesIds } }
+                    { "testSeries.test": { $in: testSeriesIds } }
                 ]
             });
 
@@ -59,11 +59,11 @@ exports.checkout = async (req, res) => {
             order,
         });
     } catch (error) {
+        console.log(error);
+        
         res.status(500).json({ error: error.message });
     }
 };
-
-
 
 exports.getAllOrders = async (req, res) => {
     try {
@@ -86,8 +86,6 @@ exports.getAllOrders = async (req, res) => {
     }
 };
 
-
-
 exports.getOrderById = async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -108,8 +106,6 @@ exports.getOrderById = async (req, res) => {
         res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
-
-
 
 exports.changeOrderStatus = async (req, res) => {
     try {

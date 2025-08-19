@@ -14,6 +14,15 @@ const VideoSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const ComboSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["Book", "TestSeries", "PYQ"], required: true },
+    itemId: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: "comboItems.type" },
+    price: { type: Number, required: true } // store price of that item
+  },
+  { _id: false }
+);
+
 
 const CourseSchema = new mongoose.Schema(
   {
@@ -37,6 +46,7 @@ const CourseSchema = new mongoose.Schema(
     features: [{ type: String }],
     images: [{ type: String }],
     videos: [VideoSchema],
+    comboItems: [ComboSchema],
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
   { timestamps: true }
