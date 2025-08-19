@@ -28,6 +28,7 @@ const cartRoutes = require("./Routes/cart");
 const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
 const CourseDetailRoute = require("./Routes/courseDetails");
+const { default: checkoutRouter } = require("./Routes/Order");
 const app = express();
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -61,6 +62,7 @@ app.use("/api/reviews", reviewRoutes);
 
 // app.use("/api/cart", cartRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/checkout",checkoutRouter);
 
 
 app.use((err, req, res, next) => {

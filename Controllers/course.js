@@ -215,7 +215,7 @@ exports.getCourses = async (req, res) => {
     if (status) filter.status = status;
 
     let query = Course.find(filter).populate("exam").populate("author", "name experience profile_image_url specialization");
-    if (viewAll !== "true") query = query.limit(5);
+    // if (viewAll !== "true") query = query.limit(5);
 
     const courses = await query;
     res.status(200).json(courses);
@@ -271,7 +271,7 @@ exports.deleteCourse = async (req, res) => {
 
 exports.uploadCourseVideo = async (req, res) => {
   try {
-    const { title, description, order, duration, url, isFree } = req.body;
+    const { title, shortDescription, longDescription, order, duration, url, isFree } = req.body;
     const courseId = req.params.courseId;
 
     const course = await Course.findById(courseId);
@@ -300,10 +300,11 @@ exports.uploadCourseVideo = async (req, res) => {
     course.videos.push({
       title: title || `Part ${course.videos.length + 1}`,
       url: videoUrl,
-      description: description || "",
       duration: duration ? Number(duration) : null,
       order: order ? Number(order) : course.videos.length + 1,
       isFree: isFree === "true",
+      shortDescription: shortDescription,
+      longDescription: longDescription,
       sourceType
     });
 
@@ -358,7 +359,7 @@ exports.updateCourseVideo = async (req, res) => {
     if (typeof isFree !== "undefined") video.isFree = isFree === "true" || isFree === true;
 
     // Sort by order after update
-    course.videos.sort((a, b) => a.order - b.order); 
+    course.videos.sort((a, b) => a.order - b.order);
 
     await course.save();
 
