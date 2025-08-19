@@ -1,11 +1,13 @@
 // routes/checkoutRoutes.js
-import express from "express";
+const express = require("express");
 
-
-import authMiddleware from "../middleware/auth.js";
-import { changeOrderStatus, checkout, getAllOrders, getOrderById } from "../Controllers/Order.js";
-
-
+const authMiddleware = require("../middleware/auth.js");
+const {
+    changeOrderStatus,
+    checkout,
+    getAllOrders,
+    getOrderById
+} = require("../Controllers/Order.js");
 
 const checkoutRouter = express.Router();
 
@@ -17,4 +19,4 @@ checkoutRouter.get("/:orderId", getOrderById);
 
 checkoutRouter.put("/:orderId/status", changeOrderStatus);
 
-export default checkoutRouter;
+module.exports = checkoutRouter;

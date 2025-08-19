@@ -28,7 +28,8 @@ const cartRoutes = require("./Routes/cart");
 const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
 const CourseDetailRoute = require("./Routes/courseDetails");
-const { default: checkoutRouter } = require("./Routes/Order");
+const checkoutRouter = require("./Routes/Order");
+
 const app = express();
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
