@@ -207,7 +207,7 @@ exports.createCourse = async (req, res) => {
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
-
+    // console.log(req.query);
     let filter = {};
     if (title) filter.title = { $regex: title, $options: "i" };
     if (exam) filter.exam = exam;
@@ -215,7 +215,8 @@ exports.getCourses = async (req, res) => {
     if (status) filter.status = status;
 
     let query = Course.find(filter).populate("exam").populate("author", "name experience profile_image_url specialization");
-    // if (viewAll !== "true") query = query.limit(5);
+
+    if (viewAll !== "true") query = query.limit(20);
 
     const courses = await query;
     res.status(200).json(courses);
