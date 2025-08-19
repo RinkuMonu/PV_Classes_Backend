@@ -22,13 +22,15 @@ const testSeriesRoutes = require("./Routes/testSeriesRoutes");
 const reviewRoutes = require("./Routes/reviewRoutes");
 // const cartRoutes = require("./Routes/cart");
 const cartRoutes = require("./Routes/cart");
+const comboRoutes = require("./Routes/comboRoutes");
 
 
 
 const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
 const CourseDetailRoute = require("./Routes/courseDetails");
-const { default: checkoutRouter } = require("./Routes/Order");
+const checkoutRouter = require("./Routes/Order");
+
 const app = express();
 app.use(cors());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -59,6 +61,7 @@ app.use("/api/current-affairs", currentAffairRoutes);
 app.use("/api/pyq", pyqRoutes);
 app.use("/api/test-series", testSeriesRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/combo", comboRoutes);
 
 // app.use("/api/cart", cartRoutes);
 app.use("/api/cart", cartRoutes);

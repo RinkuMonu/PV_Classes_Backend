@@ -163,12 +163,6 @@
 //     });
 //   }
 // };
-
-
-
-
-
-
 const Course = require("../Models/Course");
 
 // 📌 Create Course
@@ -177,7 +171,8 @@ exports.createCourse = async (req, res) => {
     const {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
-      shortDescription, longDescription, status
+      shortDescription, longDescription, status,
+      comboId, videos
     } = req.body;
 
     let courseData = {
@@ -190,9 +185,17 @@ exports.createCourse = async (req, res) => {
     if (topics) courseData.topics = Array.isArray(topics) ? topics : topics.split(",");
     if (features) courseData.features = Array.isArray(features) ? features : features.split(",");
 
-    // Images upload
     if (req.files && req.files.length > 0) {
       courseData.images = req.files.map(file => `${file.filename}`);
+    }
+
+    // 👇 Only comboId
+    if (comboId) {
+      courseData.comboId = comboId;
+    }
+
+    if (videos) {
+      courseData.videos = JSON.parse(videos);
     }
 
     const newCourse = new Course(courseData);
@@ -204,33 +207,97 @@ exports.createCourse = async (req, res) => {
   }
 };
 
+// 📌 Get all courses
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
-    // console.log(req.query);
     let filter = {};
     if (title) filter.title = { $regex: title, $options: "i" };
     if (exam) filter.exam = exam;
     if (type) filter.type = type;
     if (status) filter.status = status;
 
-    let query = Course.find(filter).populate("exam").populate("author", "name experience profile_image_url specialization");
+    let query = Course.find(filter)
+      .populate("exam")
+      .populate("author", "name experience profile_image_url specialization")
+      .populate({
+        path: "comboId",
+        populate: [
+          { path: "books", model: "Book" },
+          { path: "testSeries", model: "TestSeries" },
+          { path: "pyqs", model: "PYQ" }
+        ]
+      });
 
     if (viewAll !== "true") query = query.limit(20);
 
-    const courses = await query;
+    let courses = await query;
+
+    // 👇 Final Price Calculation (based on combo items)
+    courses = courses.map(course => {
+      let finalPrice = course.price || 0;
+      if (course.comboId) {
+        if (course.comboId.books) {
+          course.comboId.books.forEach(b => {
+            finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+          });
+        }
+        if (course.comboId.testSeries) {
+          course.comboId.testSeries.forEach(ts => {
+            finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+          });
+        }
+        if (course.comboId.pyqs) {
+          course.comboId.pyqs.forEach(pq => {
+            finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+          });
+        }
+      }
+      return { ...course.toObject(), finalPrice };
+    });
+
     res.status(200).json(courses);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// 📌 Get Course by ID
 exports.getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id).populate("exam").populate("author", "name experience profile_image_url specialization");;
+    const course = await Course.findById(req.params.id)
+      .populate("exam")
+      .populate("author", "name experience profile_image_url specialization")
+      .populate({
+        path: "comboId",
+        populate: [
+          { path: "books", model: "Book" },
+          { path: "testSeries", model: "TestSeries" },
+          { path: "pyqs", model: "PYQ" }
+        ]
+      });
+
     if (!course) return res.status(404).json({ message: "Course not found" });
-    res.status(200).json(course);
+
+    let finalPrice = course.price || 0;
+    if (course.comboId) {
+      if (course.comboId.books) {
+        course.comboId.books.forEach(b => {
+          finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+        });
+      }
+      if (course.comboId.testSeries) {
+        course.comboId.testSeries.forEach(ts => {
+          finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+        });
+      }
+      if (course.comboId.pyqs) {
+        course.comboId.pyqs.forEach(pq => {
+          finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+        });
+      }
+    }
+
+    res.status(200).json({ ...course.toObject(), finalPrice });
   } catch (error) {
     res.status(500).json({ message: "Error fetching course", error: error.message });
   }

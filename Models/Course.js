@@ -38,6 +38,8 @@ const CourseSchema = new mongoose.Schema(
     images: [{ type: String }],
     videos: [VideoSchema],
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    comboId: { type: mongoose.Schema.Types.ObjectId, ref: "Combo" }
+
   },
   { timestamps: true }
 );
