@@ -1,6 +1,7 @@
-const User = require("../Models/User"); 
+const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto"); // optional for randomness
+const Order = require("../Models/Order");
 
 exports.getOtp = async (req, res) => {
   try {
@@ -43,7 +44,7 @@ exports.getOtp = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { phone, otp } = req.body;
-    console.log("req.body =",req.body);
+    console.log("req.body =", req.body);
     if (!phone || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
@@ -73,7 +74,7 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
-      userId:user._id
+      userId: user._id
     });
 
   } catch (error) {
@@ -114,9 +115,9 @@ exports.updateUser = async (req, res) => {
 
     // Agar file aayi hai to multer se path save karo
     if (req.file) {
-        const fileUrl = `${req.protocol}://${req.get("host")}/uploads/profile_image/${req.file.filename}`;
-        updateData.profile_image = req.file.filename;
-        updateData.profile_image_url = fileUrl;
+      const fileUrl = `${req.protocol}://${req.get("host")}/uploads/profile_image/${req.file.filename}`;
+      updateData.profile_image = req.file.filename;
+      updateData.profile_image_url = fileUrl;
     }
 
 
@@ -179,5 +180,61 @@ exports.updateUserStatus = async (req, res) => {
   } catch (error) {
     console.error("Error updating user status:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getMyPurchases = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const orders = await Order.find({
+      user: userId,
+      orderStatus: "completed"
+    })
+      .populate("courses.course")
+      .populate("books.book")
+      .populate("testSeries.test")
+      .sort({ createdAt: -1 });
+
+    const purchasedCourses = [];
+    const purchasedBooks = [];
+    const purchasedTestSeries = [];
+
+    orders.forEach(order => {
+      // 🟢 Courses
+      order.courses.forEach(c => {
+        if (c.course) {
+          purchasedCourses.push(
+            c.course
+          );
+        }
+      });
+
+      // 🟢 Books
+      order.books.forEach(b => {
+        if (b.book) {
+          purchasedBooks.push(
+            b.book
+          );
+        }
+      });
+
+      // 🟢 Test Series
+      order.testSeries.forEach(t => {
+        if (t.test) {
+          purchasedTestSeries.push(
+            t.test
+          );
+        }
+      });
+    });
+
+    res.status(200).json({
+      success: true,
+      items: { purchasedCourses, purchasedBooks, purchasedTestSeries }
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
