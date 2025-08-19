@@ -104,16 +104,14 @@ exports.getUserData = async (req, res) => {
 };
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, state, district } = req.body; // form-data text fields
+    const { name, email, phone} = req.body; // form-data text fields
     const userId = req.user.id;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
-    if (state) updateData.state = state;
-    if (district) updateData.district = district;
+    if (phone) updateData.phone = phone;
 
-    // Agar file aayi hai to multer se path save karo
     if (req.file) {
       const fileUrl = `${req.protocol}://${req.get("host")}/uploads/profile_image/${req.file.filename}`;
       updateData.profile_image = req.file.filename;
