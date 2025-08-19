@@ -3,19 +3,23 @@ const upload = require("../middleware/upload");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const {
-    getOtp,
-    loginUser,
-    updateUser,
-    getUserData,
-    getAllUserData,
-    updateUserStatus
+  getOtp,
+  loginUser,
+  updateUser,
+  getUserData,
+  getAllUserData,
+  updateUserStatus,
+  getMyPurchases
 } = require("../Controllers/userController");
 
 router.post("/get-otp", getOtp);
 router.post("/login", loginUser);
-router.get("/getUser",auth, getUserData);
-router.get("/getAllUser",auth, getAllUserData);
-router.put("/updateStatus",auth, updateUserStatus);
+router.get("/getUser", auth, getUserData);
+router.get("/getAllUser", auth, getAllUserData);
+router.put("/updateStatus", auth, updateUserStatus);
+
+// My Courses / My Books
+router.get("/my-purchases", auth, getMyPurchases);
 
 const path = require("path");
 
