@@ -58,8 +58,7 @@ exports.getAllTestSeries = async (req, res) => {
   try {
     const testSeriesList = await TestSeries.find()
       .populate("exam_id", "name")
-      .sort({ createdAt: -1 })
-      .lean({ virtuals: true }); // Virtuals enable for lean
+      .sort({ createdAt: -1 });
 
     if (!testSeriesList || testSeriesList.length === 0) {
       return res.status(404).json({
@@ -81,10 +80,9 @@ exports.getAllTestSeries = async (req, res) => {
         };
       }
 
-      acc[examId].series.push(series);
+      acc[examId].series.push(series.toJSON());
       return acc;
     }, {});
-
     res.status(200).json({
       success: true,
       message: "Test Series fetched successfully",
@@ -100,6 +98,7 @@ exports.getAllTestSeries = async (req, res) => {
     });
   }
 };
+
 
 // Get by Exam
 exports.getByExam = async (req, res) => {
