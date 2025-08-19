@@ -172,7 +172,7 @@ exports.createCourse = async (req, res) => {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
       shortDescription, longDescription, status,
-      comboItems, videos // 👈 added videos
+      comboId, videos
     } = req.body;
 
     let courseData = {
@@ -185,17 +185,15 @@ exports.createCourse = async (req, res) => {
     if (topics) courseData.topics = Array.isArray(topics) ? topics : topics.split(",");
     if (features) courseData.features = Array.isArray(features) ? features : features.split(",");
 
-    // Images upload
     if (req.files && req.files.length > 0) {
       courseData.images = req.files.map(file => `${file.filename}`);
     }
 
-    // 👇 Combo Items add
-    if (comboItems) {
-      courseData.comboItems = JSON.parse(comboItems);
+    // 👇 Only comboId
+    if (comboId) {
+      courseData.comboId = comboId;
     }
 
-    // 👇 Videos add
     if (videos) {
       courseData.videos = JSON.parse(videos);
     }
@@ -209,6 +207,7 @@ exports.createCourse = async (req, res) => {
   }
 };
 
+// 📌 Get all courses
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
@@ -221,30 +220,39 @@ exports.getCourses = async (req, res) => {
     let query = Course.find(filter)
       .populate("exam")
       .populate("author", "name experience profile_image_url specialization")
-      .populate("comboItems.itemId"); // 👈 populate combo items
+      .populate({
+        path: "comboId",
+        populate: [
+          { path: "books", model: "Book" },
+          { path: "testSeries", model: "TestSeries" },
+          { path: "pyqs", model: "PYQ" }
+        ]
+      });
 
     if (viewAll !== "true") query = query.limit(20);
 
     let courses = await query;
 
-    // 👇 Add finalPrice for each course
+    // 👇 Final Price Calculation (based on combo items)
     courses = courses.map(course => {
       let finalPrice = course.price || 0;
-
-      if (course.comboItems && course.comboItems.length > 0) {
-        course.comboItems.forEach(item => {
-          if (item.type === "Book" && item.itemId) {
-            finalPrice += item.itemId.discount_price > 0 ? item.itemId.discount_price : item.itemId.price;
-          }
-          if (item.type === "TestSeries" && item.itemId) {
-            finalPrice += item.itemId.discount_price > 0 ? item.itemId.discount_price : item.itemId.price;
-          }
-          if (item.type === "PYQ" && item.itemId) {
-            finalPrice += item.itemId.finalPrice || item.itemId.price;
-          }
-        });
+      if (course.comboId) {
+        if (course.comboId.books) {
+          course.comboId.books.forEach(b => {
+            finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+          });
+        }
+        if (course.comboId.testSeries) {
+          course.comboId.testSeries.forEach(ts => {
+            finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+          });
+        }
+        if (course.comboId.pyqs) {
+          course.comboId.pyqs.forEach(pq => {
+            finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+          });
+        }
       }
-
       return { ...course.toObject(), finalPrice };
     });
 
@@ -254,31 +262,39 @@ exports.getCourses = async (req, res) => {
   }
 };
 
-// 📌 Get Course by ID
 exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate("exam")
       .populate("author", "name experience profile_image_url specialization")
-      .populate("comboItems.itemId");
+      .populate({
+        path: "comboId",
+        populate: [
+          { path: "books", model: "Book" },
+          { path: "testSeries", model: "TestSeries" },
+          { path: "pyqs", model: "PYQ" }
+        ]
+      });
 
     if (!course) return res.status(404).json({ message: "Course not found" });
 
-    // 👇 Final price calculation
     let finalPrice = course.price || 0;
-
-    if (course.comboItems && course.comboItems.length > 0) {
-      course.comboItems.forEach(item => {
-        if (item.type === "Book" && item.itemId) {
-          finalPrice += item.itemId.discount_price > 0 ? item.itemId.discount_price : item.itemId.price;
-        }
-        if (item.type === "TestSeries" && item.itemId) {
-          finalPrice += item.itemId.discount_price > 0 ? item.itemId.discount_price : item.itemId.price;
-        }
-        if (item.type === "PYQ" && item.itemId) {
-          finalPrice += item.itemId.finalPrice || item.itemId.price;
-        }
-      });
+    if (course.comboId) {
+      if (course.comboId.books) {
+        course.comboId.books.forEach(b => {
+          finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+        });
+      }
+      if (course.comboId.testSeries) {
+        course.comboId.testSeries.forEach(ts => {
+          finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+        });
+      }
+      if (course.comboId.pyqs) {
+        course.comboId.pyqs.forEach(pq => {
+          finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+        });
+      }
     }
 
     res.status(200).json({ ...course.toObject(), finalPrice });
