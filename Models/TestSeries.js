@@ -104,9 +104,9 @@ const testSeriesSchema = new mongoose.Schema(
     toObject: { virtuals: true }
   }
 );
-
-// Virtual for full image URLs (as-is)
-testSeriesSchema.virtual("image_urls").get(function () {
+console.log("BASE_URL:", process.env.BASE_URL);
+// Virtual for full image URLs
+testSeriesSchema.virtual("full_image").get(function () {
   if (!this.images || this.images.length === 0) return [];
   const baseUrl = process.env.BASE_URL || "http://localhost:5000";
   return this.images.map(img => `${baseUrl}/uploads/testSeries/${img}`);

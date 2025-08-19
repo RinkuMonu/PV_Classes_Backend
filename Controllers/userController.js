@@ -104,14 +104,17 @@ exports.getUserData = async (req, res) => {
 };
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, phone} = req.body; // form-data text fields
+    const { name, email, phone,address,city,state,pincode} = req.body; // form-data text fields
     const userId = req.user.id;
 
     const updateData = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
     if (phone) updateData.phone = phone;
-
+    if (address) updateData.address = address;
+    if (city) updateData.city = city;
+    if (state) updateData.state = state;
+    if (pincode) updateData.pincode = pincode;
     if (req.file) {
       const fileUrl = `${req.protocol}://${req.get("host")}/uploads/profile_image/${req.file.filename}`;
       updateData.profile_image = req.file.filename;

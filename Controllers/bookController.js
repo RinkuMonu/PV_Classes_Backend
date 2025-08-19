@@ -8,7 +8,7 @@ exports.createBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag,
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -27,7 +27,7 @@ exports.createBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag: tag ? tag.split(",") : [],
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -55,7 +55,7 @@ exports.createBook = async (req, res) => {
 exports.getAllBooks = async (req, res) => {
   try {
    const books = await Book.find()
-  .select("_id book_category_id book_subcategory_id images tag book_title price discount_price language")
+  .select("_id book_category_id book_subcategory_id images tag title price discount_price language")
   .populate("book_category_id", "name full_image") // ✅ Category name + image
   .populate("book_subcategory_id", "name") // ✅ Subcategory name
   .lean({ virtuals: true });
@@ -80,7 +80,7 @@ const groupedBooks = books.reduce((acc, book) => {
     },
     images: book.images,
     tag: book.tag,
-    book_title: book.book_title,
+    title: book.title,
     price: book.price,
     discount_price: book.discount_price,
     language: book.language
@@ -132,7 +132,7 @@ exports.updateBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag,
-      book_title,
+      title,
       book_description,
       price,
       discount_price,
@@ -146,7 +146,7 @@ exports.updateBook = async (req, res) => {
       book_subcategory_id,
       status,
       tag: tag ? tag.split(",") : [],
-      book_title,
+      title,
       book_description,
       price,
       discount_price,

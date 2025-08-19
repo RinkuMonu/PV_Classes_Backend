@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema(
     phone: { type: String, required: true, trim: true },
     referral_code: { type: String, default: null },
     otp: { type: Number },
+    address: { type: String},
     course_id: { type: mongoose.Schema.Types.ObjectId, ref: "CourseCategory" },
     status: {
       type: String,
@@ -14,6 +15,8 @@ const UserSchema = new mongoose.Schema(
       default: "active",
     },
     state: { type: String },
+    city: { type: String },
+    pincode: { type: String },
     district: { type: String },
     profile_image: { type: String, default: null },
     role: {

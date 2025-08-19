@@ -48,35 +48,32 @@ exports.getCart = async (req, res) => {
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
     }
-    let cart = await Cart.findOne({ user: userId }).lean();
+
+    let cart = await Cart.findOne({ user: userId });
     if (!cart) {
       return res.status(200).json({
         success: true,
         message: "Cart is empty",
-        cart: {
-          user: userId,
-          items: [],
-        },
+        cart: { user: userId, items: [] },
       });
     }
 
-    // Populate items manually based on type
+    // ✅ Populate with full data (virtuals auto included)
     const populatedItems = await Promise.all(
       cart.items.map(async (item) => {
         let productData = null;
+
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId).populate("category_id").lean();
+          productData = await Course.findById(item.itemId).populate("category_id");
         } else if (item.itemType === "book") {
-          productData = await Book.findById(item.itemId).populate("book_category_id").lean();
+          productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
-          productData = await TestSeries.findById(item.itemId).lean();
+          productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
-          productData = await PYQ.findById(item.itemId).lean();
+          productData = await PYQ.findById(item.itemId);
         }
-        return {
-          ...item,
-          details: productData, // ✅ full product info
-        };
+
+        return { ...item.toObject(), details: productData };
       })
     );
 
@@ -84,11 +81,12 @@ exports.getCart = async (req, res) => {
       success: true,
       message: "Cart fetched successfully",
       cart: {
-        ...cart,
+        ...cart.toObject(),
         items: populatedItems,
       },
     });
   } catch (error) {
+    console.error("Error fetching cart:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching cart",
@@ -96,6 +94,7 @@ exports.getCart = async (req, res) => {
     });
   }
 };
+
 exports.getStorageCart = async (req, res) => {
   try {
     // parse cart data from query
@@ -115,22 +114,19 @@ exports.getStorageCart = async (req, res) => {
         let productData = null;
 
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId)
-            .populate("category_id")
-            .lean();
+          productData = await Course.findById(item.itemId).populate("category_id");
         } else if (item.itemType === "book") {
-          productData = await Book.findById(item.itemId)
-            .populate("book_category_id")
-            .lean();
+          productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
-          productData = await TestSeries.findById(item.itemId).lean();
+          productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
-          productData = await PYQ.findById(item.itemId).lean();
+          productData = await PYQ.findById(item.itemId);
         }
 
+        // productData.toJSON() => virtuals include honge
         return {
           ...item,
-          details: productData,
+          details: productData ? productData.toJSON() : null,
         };
       })
     );
@@ -141,6 +137,7 @@ exports.getStorageCart = async (req, res) => {
       cart: { items: populatedItems },
     });
   } catch (error) {
+    console.error("Error fetching storage cart:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching cart",

@@ -40,8 +40,7 @@ exports.getAllTestSeries = async (req, res) => {
   try {
     const testSeriesList = await TestSeries.find()
       .populate("exam_id", "name")
-      .sort({ createdAt: -1 })
-      .lean({ virtuals: true });
+      .sort({ createdAt: -1 });
 
     if (!testSeriesList || testSeriesList.length === 0) {
       return res.status(404).json({ success: false, message: "No Test Series found" });
@@ -50,17 +49,28 @@ exports.getAllTestSeries = async (req, res) => {
     const groupedData = testSeriesList.reduce((acc, series) => {
       const examId = series.exam_id?._id?.toString();
       const examName = series.exam_id?.name || "Unknown Exam";
-      if (!acc[examId]) acc[examId] = { exam_id: examId, exam_name: examName, series: [] };
-      acc[examId].series.push(series);
+
+      if (!acc[examId]) {
+        acc[examId] = {
+          exam_id: examId,
+          exam_name: examName,
+          series: []
+        };
+      }
+
+      acc[examId].series.push(series.toJSON());
       return acc;
     }, {});
+    res.status(200).json({
+      success: true,
+      message: "Test Series fetched successfully",
+      data: Object.values(groupedData)
+    });
 
-    res.status(200).json({ success: true, message: "Fetched", data: Object.values(groupedData) });
   } catch (err) {
     res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
   }
 };
-
 /* ---------- EXISTING: by exam ---------- */
 exports.getByExam = async (req, res) => {
   try {
