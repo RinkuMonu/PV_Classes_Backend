@@ -1,6 +1,6 @@
 const Order = require("../Models/Order");
-
-
+const Access = require("../Models/Access");
+const Course = require("../Models/Course");
 exports.checkout = async (req, res) => {
     try {
         const { courses = [], books = [], testSeries = [], address, paymentMethod, totalAmount } = req.body;
@@ -10,38 +10,7 @@ exports.checkout = async (req, res) => {
             return res.status(400).json({ message: "At least one item (course/book/testSeries) and all fields are required!" });
         }
 
-        if ((courses?.length || books?.length || testSeries?.length) > 0) {
-
-            const courseIds = courses?.map(c => c.course) || [];
-            const bookIds = books?.map(b => b.book) || [];
-            const testSeriesIds = testSeries?.map(t => t.test) || [];
-
-            console.log(courseIds, bookIds, testSeriesIds)
-
-            const existingOrder = await Order.findOne({
-                user: userId,
-                orderStatus: "completed",
-                $or: [
-                    { "courses.course": { $in: courseIds } },
-                    { "books.book": { $in: bookIds } },
-                    { "testSeries.test": { $in: testSeriesIds } }
-                ]
-            });
-
-            if (existingOrder) {
-                return res.status(400).json({
-                    message: "You already purchased one of these items!",
-                    alreadyPurchased: {
-                        courses: existingOrder.courses.map(c => c.course),
-                        books: existingOrder.books.map(b => b.book),
-                        testSeries: existingOrder.testSeries.map(t => t.testSeries)
-                    }
-                });
-            }
-        }
-
-
-
+        // Create order with initial pending/processing status
         const order = new Order({
             user: userId,
             courses,
@@ -49,18 +18,76 @@ exports.checkout = async (req, res) => {
             testSeries,
             address,
             totalAmount,
-            paymentMethod
+            paymentMethod,
+            paymentStatus: "pending",
+            orderStatus: "processing"
         });
-
         await order.save();
 
+        // ✅ Grant Access for courses + combo items
+        for (const c of courses) {
+            const course = await Course.findById(c.course).populate("comboId");
+            if (!course) continue;
+
+            const validTill = course.validity
+                ? new Date(Date.now() + parseInt(course.validity) * 24 * 60 * 60 * 1000)
+                : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // default 1 year
+
+            // Course access
+            const existingAccessCourse = await Access.findOne({ user: userId, course: course._id });
+            if (!existingAccessCourse) {
+                await Access.create({ user: userId, course: course._id, validTill });
+            }
+
+            // Combo items access
+            if (course.comboId) {
+                const combo = course.comboId;
+                
+                if (combo.books?.length > 0) {
+                    for (const bookId of combo.books) {
+                        const existingBookAccess = await Access.findOne({ user: userId, book: bookId });
+                        if (!existingBookAccess) {
+                            await Access.create({ user: userId, book: bookId, validTill });
+                        }
+                    }
+                }
+
+                if (combo.testSeries?.length > 0) {
+                    for (const testId of combo.testSeries) {
+                        const existingTestAccess = await Access.findOne({ user: userId, testSeries: testId });
+                        if (!existingTestAccess) {
+                            await Access.create({ user: userId, testSeries: testId, validTill });
+                        }
+                    }
+                }
+            }
+        }
+
+        // ✅ Grant Access for standalone books
+        for (const b of books) {
+            const validTill = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            const existingBookAccess = await Access.findOne({ user: userId, book: b.book });
+            if (!existingBookAccess) {
+                await Access.create({ user: userId, book: b.book, validTill });
+            }
+        }
+
+        // ✅ Grant Access for standalone testSeries
+        for (const t of testSeries) {
+            const validTill = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            const existingTestAccess = await Access.findOne({ user: userId, testSeries: t.test });
+            if (!existingTestAccess) {
+                await Access.create({ user: userId, testSeries: t.test, validTill });
+            }
+        }
+
         res.status(201).json({
-            message: "Checkout successful, order created!",
-            order,
+            message: "Checkout successful, order created, access granted!",
+            order
         });
+
     } catch (error) {
         console.log(error);
-        
         res.status(500).json({ error: error.message });
     }
 };
