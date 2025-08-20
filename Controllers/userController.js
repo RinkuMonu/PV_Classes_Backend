@@ -2,49 +2,55 @@ const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto"); // optional for randomness
 const Order = require("../Models/Order");
+const axios = require("axios");
 
-exports.getOtp = async (req, res) => {
+exports.sendOtp = async (req, res) => {
   try {
-    const { phone, referral_code } = req.body;
+    const { phone } = req.body;
 
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    const otp = Math.floor(10000 + Math.random() * 90000); // integer OTP
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Build update data
-    const updateData = { phone, otp };
-    if (referral_code) updateData.referral_code = referral_code;
-
-    // Update or create user
-    const user = await User.findOneAndUpdate(
+    // Save or update user with OTP only
+    await User.findOneAndUpdate(
       { phone },
-      { $set: updateData },
-      { new: true, upsert: true }
+      { phone, otp },
+      { upsert: true, new: true }
+    );
+
+    // Send OTP using Fast2SMS
+    const response = await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        route: "q",
+        message: `Your OTP is ${otp}`,
+        numbers: phone,
+      },
+      {
+        headers: {
+          authorization: process.env.FAST2SMS_API_KEY,
+        },
+      }
     );
 
     res.status(200).json({
       message: "OTP sent successfully",
-      data: {
-        phone: user.phone,
-        referral_code: user.referral_code || null,
-        otp
-      }
+      response: response.data,
     });
-
   } catch (error) {
-    console.error("Get OTP Error:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error sending OTP", error: error.message });
   }
 };
+
 exports.loginUser = async (req, res) => {
   try {
     const { phone, otp } = req.body;
     console.log("req.body =", req.body);
+
     if (!phone || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
@@ -71,6 +77,7 @@ exports.loginUser = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -82,6 +89,7 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -102,6 +110,7 @@ exports.getUserData = async (req, res) => {
     });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, phone,address,city,state,pincode} = req.body; // form-data text fields
@@ -141,6 +150,7 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 exports.getAllUserData = async (req, res) => {
   try {
     const users = await User.find(); // fetch all users
@@ -156,6 +166,7 @@ exports.getAllUserData = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.updateUserStatus = async (req, res) => {
   try {
     const { userId } = req.body; // or req.params.userId if you want
