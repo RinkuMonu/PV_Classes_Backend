@@ -3,20 +3,21 @@ const Combo = require("../Models/Combo");
 // ✅ Create Combo
 exports.createCombo = async (req, res) => {
     try {
-        const { title, slug, description, price, discount_price, validity, books, testSeries, pyqs } = req.body;
+        const { title, slug, description, price, discountPercent, validity, books, testSeries, pyqs } = req.body;
 
         const newCombo = new Combo({
             title,
             slug,
             description,
             price,
-            discount_price,
+            discountPercent,
             validity,
             books,
             testSeries,
             pyqs,
         });
 
+        // discount_price will be calculated by pre-save hook
         await newCombo.save();
         res.status(201).json({ success: true, combo: newCombo });
     } catch (error) {
@@ -56,15 +57,19 @@ exports.getComboById = async (req, res) => {
 // ✅ Update Combo
 exports.updateCombo = async (req, res) => {
     try {
-        const updatedCombo = await Combo.findByIdAndUpdate(
-            req.params.id,
-            { ...req.body, updatedAt: Date.now() },
-            { new: true }
-        );
+        const combo = await Combo.findById(req.params.id);
+        if (!combo) return res.status(404).json({ success: false, message: "Combo not found" });
 
-        if (!updatedCombo) return res.status(404).json({ success: false, message: "Combo not found" });
+        // Update fields
+        Object.assign(combo, req.body);
 
-        res.status(200).json({ success: true, combo: updatedCombo });
+        // Recalculate discount_price if price or discountPercent changes
+        if (req.body.price || req.body.discountPercent) {
+            combo.discount_price = combo.price - (combo.price * (combo.discountPercent || 0)) / 100;
+        }
+
+        await combo.save();
+        res.status(200).json({ success: true, combo });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
