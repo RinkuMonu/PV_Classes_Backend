@@ -2,38 +2,60 @@ const Order = require("../Models/Order");
 const Access = require("../Models/Access");
 const Course = require("../Models/Course");
 exports.checkout = async (req, res) => {
-    try {
-        const { courses = [], books = [], testSeries = [], address, paymentMethod, totalAmount } = req.body;
-        const userId = req.user.id;
 
-        if ((!courses.length && !books.length && !testSeries.length) || !address || !paymentMethod || !totalAmount) {
-            return res.status(400).json({ message: "At least one item (course/book/testSeries) and all fields are required!" });
+    try {
+        const userId = req.user.id;
+        // Step 1: Transform cart by itemType
+        const grouped = { courses: [], books: [], testSeries: [] };
+        req.body.cart.forEach(item => {
+            if (item.itemType === "course") {
+                grouped.courses.push({ course: item.itemId, quantity: item.quantity });
+            } else if (item.itemType === "book") {
+                grouped.books.push({ book: item.itemId, quantity: item.quantity });
+            } else if (item.itemType === "testSeries") {
+                grouped.testSeries.push({ test: item.itemId, quantity: item.quantity });
+            }
+        });
+
+        const { courses, books, testSeries } = grouped;
+        const { user, paymentMethod, total } = req.body;
+
+        const address = {
+            street: user.address,
+            city: user.city,
+            state: user.state,
+            postalCode: user.pincode,
+            country: user.country || "India" 
+        };
+
+        if ((!courses.length && !books.length && !testSeries.length) || !user || !paymentMethod || !total) {
+            return res.status(400).json({ message: "At least one item and all fields are required!" });
         }
 
-        // Create order with initial pending/processing status
+        // Step 2: Create Order
         const order = new Order({
             user: userId,
             courses,
             books,
             testSeries,
             address,
-            totalAmount,
+            totalAmount: total,
             paymentMethod,
             paymentStatus: "pending",
             orderStatus: "processing"
         });
         await order.save();
 
-        // ✅ Grant Access for courses + combo items
+        // Step 3: Grant Access for Courses (+ Combo)
         for (const c of courses) {
             const course = await Course.findById(c.course).populate("comboId");
             if (!course) continue;
 
             const validTill = course.validity
                 ? new Date(Date.now() + parseInt(course.validity) * 24 * 60 * 60 * 1000)
-                : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // default 1 year
+                : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
-            // Course access
+            // Standalone course access
             const existingAccessCourse = await Access.findOne({ user: userId, course: course._id });
             if (!existingAccessCourse) {
                 await Access.create({ user: userId, course: course._id, validTill });
@@ -42,7 +64,7 @@ exports.checkout = async (req, res) => {
             // Combo items access
             if (course.comboId) {
                 const combo = course.comboId;
-                
+
                 if (combo.books?.length > 0) {
                     for (const bookId of combo.books) {
                         const existingBookAccess = await Access.findOne({ user: userId, book: bookId });
@@ -63,7 +85,7 @@ exports.checkout = async (req, res) => {
             }
         }
 
-        // ✅ Grant Access for standalone books
+        // Step 4: Standalone Books
         for (const b of books) {
             const validTill = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
             const existingBookAccess = await Access.findOne({ user: userId, book: b.book });
@@ -72,7 +94,7 @@ exports.checkout = async (req, res) => {
             }
         }
 
-        // ✅ Grant Access for standalone testSeries
+        // Step 5: Standalone TestSeries
         for (const t of testSeries) {
             const validTill = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
             const existingTestAccess = await Access.findOne({ user: userId, testSeries: t.test });
@@ -85,7 +107,6 @@ exports.checkout = async (req, res) => {
             message: "Checkout successful, order created, access granted!",
             order
         });
-
     } catch (error) {
         console.log(error);
         res.status(500).json({ error: error.message });

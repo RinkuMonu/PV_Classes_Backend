@@ -18,24 +18,21 @@ const OrderSchema = new mongoose.Schema({
     // Courses purchase
     courses: [
         {
-            course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-            price: { type: Number, required: true }
+            course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true }
         }
     ],
 
     // Books purchase
     books: [
         {
-            book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
-            price: { type: Number, required: true }
+            book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true }
         }
     ],
 
     // Test Series purchase
     testSeries: [
         {
-            test: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries", required: true },
-            price: { type: Number, required: true }
+            test: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries", required: true }
         }
     ],
 
