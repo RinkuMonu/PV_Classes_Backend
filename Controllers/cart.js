@@ -275,26 +275,21 @@ exports.updateQuantity = async (req, res) => {
 
 exports.clearCart = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.user.id;
         if (!userId) {
             return res.status(400).json({ message: "User ID is required" });
         }
-
         // Find the cart first
         const cart = await Cart.findOne({ user: userId });
         if (!cart) {
             return res.status(404).json({ message: "Cart not found" });
         }
-
-        // If there are items, remove them; if already empty, delete cart
         if (cart.items.length > 0) {
-            await Cart.deleteOne({ user: userId }); // delete the entire cart
+            await Cart.deleteOne({ user: userId });
         } else {
             return res.status(200).json({ message: "Cart is already empty" });
         }
-
         res.status(200).json({ message: "Cart cleared and removed from DB", subtotal: 0, tax: 0, total: 0 });
-
     } catch (error) {
         res.status(500).json({ message: "Error clearing cart", error: error.message });
     }
