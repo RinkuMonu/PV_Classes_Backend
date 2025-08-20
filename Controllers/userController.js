@@ -12,22 +12,24 @@ exports.sendOtp = async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // Generate OTP
+    // ✅ Generate OTP manually (since bulkV2 needs custom message)
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Save or update user with OTP only
+    // Save OTP in DB
     await User.findOneAndUpdate(
       { phone },
       { phone, otp },
       { upsert: true, new: true }
     );
 
-    // Send OTP using Fast2SMS
+    // ✅ Send OTP using Fast2SMS quick route
     const response = await axios.post(
       "https://www.fast2sms.com/dev/bulkV2",
       {
         route: "q",
-        message: `Your OTP is ${otp}`,
+        message: `Your OTP for login is ${otp}`, // custom message
+        language: "english",
+        flash: 0,
         numbers: phone,
       },
       {
@@ -42,7 +44,10 @@ exports.sendOtp = async (req, res) => {
       response: response.data,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error sending OTP", error: error.message });
+    res.status(500).json({
+      message: "Error sending OTP",
+      error: error.response?.data || error.message,
+    });
   }
 };
 
