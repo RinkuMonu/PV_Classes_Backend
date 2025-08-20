@@ -3,7 +3,7 @@ const upload = require("../middleware/upload");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const {
-  getOtp,
+  sendOtp,
   loginUser,
   updateUser,
   getUserData,
@@ -12,7 +12,7 @@ const {
   getMyPurchases
 } = require("../Controllers/userController");
 
-router.post("/get-otp", getOtp);
+router.post("/get-otp", sendOtp);
 router.post("/login", loginUser);
 router.get("/getUser", auth, getUserData);
 router.get("/getAllUser", auth, getAllUserData);
