@@ -5,7 +5,7 @@ const verifyToken = require("../middleware/auth");
 
 router.post("/", verifyToken, couponController.createCoupon);
 
-router.get("/", couponController.getAllCoupons);
+router.get("/",verifyToken, couponController.getAllCoupons);
 
 router.get("/:id", couponController.getCoupon);
 
