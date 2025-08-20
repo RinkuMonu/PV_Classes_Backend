@@ -51,6 +51,7 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
+
 exports.loginUser = async (req, res) => {
   try {
     const { phone, otp } = req.body;
