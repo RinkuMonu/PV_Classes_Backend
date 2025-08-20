@@ -31,22 +31,29 @@ export const createCoupon = async (req, res) => {
         });
     }
 };
-
 // Get all coupons
 export const getAllCoupons = async (req, res) => {
-    try {
-        const coupons = await Coupon.find().sort({ createdAt: -1 });
-        res.status(200).json({
-            success: true,
-            data: coupons,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
-    }
+  const userId = req.user.id;
+  try {
+    const coupons = await Coupon.find({
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+      usedBy: { $ne: userId }, // logged-in user id not in usedBy
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: coupons,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
+
 
 // Get single coupon by ID
 export const getCoupon = async (req, res) => {
