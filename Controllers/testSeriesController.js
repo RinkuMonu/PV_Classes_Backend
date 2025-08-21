@@ -90,13 +90,32 @@ exports.getByExam = async (req, res) => {
 /* ---------- EXISTING: by id ---------- */
 exports.getTestSeriesById = async (req, res) => {
   try {
-    const series = await TestSeries.findById(req.params.id).populate("exam_id", "name");
-    if (!series) return res.status(404).json({ success: false, message: "Test Series not found" });
+    const userId = req.user.id; // ✅ sirf isse hi lena hai
+
+    const series = await TestSeries.findById(req.params.id)
+      .populate("exam_id", "name")
+      .lean();
+
+    if (!series) {
+      return res.status(404).json({ success: false, message: "Test Series not found" });
+    }
+
+    // ✅ attempts filter karo
+    series.attempts = Array.isArray(series.attempts)
+      ? series.attempts.filter((a) => String(a.user_id) === String(userId))
+      : [];
+
     res.status(200).json({ success: true, message: "Fetched", data: series });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Internal Server Error", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: err.message,
+    });
   }
 };
+
+
 
 /* ---------- EXISTING: update (fixed file field) ---------- */
 exports.updateTestSeries = async (req, res) => {
