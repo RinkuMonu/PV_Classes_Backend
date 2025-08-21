@@ -11,24 +11,22 @@ exports.sendOtp = async (req, res) => {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    // ✅ Generate OTP manually (since bulkV2 needs custom message)
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Save OTP in DB
+    // Save or update user with OTP only
     await User.findOneAndUpdate(
       { phone },
       { phone, otp },
       { upsert: true, new: true }
     );
 
-    // ✅ Send OTP using Fast2SMS quick route
+    // Send OTP using Fast2SMS
     const response = await axios.post(
       "https://www.fast2sms.com/dev/bulkV2",
       {
         route: "q",
-        message: `Your OTP for login is ${otp}`, // custom message
-        language: "english",
-        flash: 0,
+        message: `Your OTP is ${otp}`,
         numbers: phone,
       },
       {
@@ -43,13 +41,9 @@ exports.sendOtp = async (req, res) => {
       response: response.data,
     });
   } catch (error) {
-    res.status(500).json({
-      message: "Error sending OTP",
-      error: error.response?.data || error.message,
-    });
+    res.status(500).json({ message: "Error sending OTP", error: error.message });
   }
 };
-
 
 exports.loginUser = async (req, res) => {
   try {
@@ -200,6 +194,63 @@ exports.updateUserStatus = async (req, res) => {
   }
 };
 
+// exports.getMyPurchases = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+
+//     const orders = await Order.find({
+//       user: userId,
+//       orderStatus: "completed"
+//     })
+//       .populate("courses.course")
+//       .populate("books.book")
+//       .populate("testSeries.test")
+//       .sort({ createdAt: -1 });
+
+//     const purchasedCourses = [];
+//     const purchasedBooks = [];
+//     const purchasedTestSeries = [];
+
+//     orders.forEach(order => {
+//       // 🟢 Courses
+//       order.courses.forEach(c => {
+//         if (c.course) {
+//           purchasedCourses.push(
+//             c.course
+//           );
+//         }
+//       });
+
+//       // 🟢 Books
+//       order.books.forEach(b => {
+//         if (b.book) {
+//           purchasedBooks.push(
+//             b.book
+//           );
+//         }
+//       });
+
+//       // 🟢 Test Series
+//       order.testSeries.forEach(t => {
+//         if (t.test) {
+//           purchasedTestSeries.push(
+//             t.test
+//           );
+//         }
+//       });
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       items: { purchasedCourses, purchasedBooks, purchasedTestSeries }
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 exports.getMyPurchases = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -208,7 +259,11 @@ exports.getMyPurchases = async (req, res) => {
       user: userId,
       orderStatus: "completed"
     })
-      .populate("courses.course")
+      .populate({
+        path: "courses.course",
+        populate: { path: "comboId", populate: ["books", "testSeries","pyqs"] } // ✅ combo ke andar books aur test series bhi
+        
+      })
       .populate("books.book")
       .populate("testSeries.test")
       .sort({ createdAt: -1 });
@@ -221,28 +276,37 @@ exports.getMyPurchases = async (req, res) => {
       // 🟢 Courses
       order.courses.forEach(c => {
         if (c.course) {
-          purchasedCourses.push(
-            c.course
-          );
+          purchasedCourses.push(c.course);
+
+          // ✅ Agar course me combo hai to uske items bhi add karo
+          if (c.course.comboId) {
+            const combo = c.course.comboId;
+
+            // Combo books
+            if (combo.books?.length > 0) {
+              combo.books.forEach(b => {
+                if (b) purchasedBooks.push(b);
+              });
+            }
+
+            // Combo testSeries
+            if (combo.testSeries?.length > 0) {
+              combo.testSeries.forEach(t => {
+                if (t) purchasedTestSeries.push(t);
+              });
+            }
+          }
         }
       });
 
-      // 🟢 Books
+      // 🟢 Standalone Books
       order.books.forEach(b => {
-        if (b.book) {
-          purchasedBooks.push(
-            b.book
-          );
-        }
+        if (b.book) purchasedBooks.push(b.book);
       });
 
-      // 🟢 Test Series
+      // 🟢 Standalone Test Series
       order.testSeries.forEach(t => {
-        if (t.test) {
-          purchasedTestSeries.push(
-            t.test
-          );
-        }
+        if (t.test) purchasedTestSeries.push(t.test);
       });
     });
 
@@ -252,6 +316,7 @@ exports.getMyPurchases = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("❌ Error in getMyPurchases:", error);
     res.status(500).json({ error: error.message });
   }
 };

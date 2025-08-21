@@ -4,7 +4,7 @@ const TestSeries = require("../Models/TestSeries");
 
 /* ---------- EXISTING: create ---------- */
 exports.createTestSeries = async (req, res) => {
-  
+
   try {
     const {
       exam_id, title, title_tag, description,
@@ -522,7 +522,7 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     if (!series) {
       return res.status(404).json({ message: "Series not found" });
     }
-
+    
     series.attempts = clean(series.attempts);
     series.tests = clean(series.tests);
 

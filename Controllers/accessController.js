@@ -40,7 +40,7 @@ exports.checkAccess = async (req, res) => {
                 hasAccess = true;
                 break;
             }
-            if (order.testSeries.some(t => t.test._id.toString() === itemId)) {
+            if (order.testSeries.some(t => t.test && t.test._id.toString() === itemId)) {
                 hasAccess = true;
                 break;
             }
@@ -55,7 +55,7 @@ exports.checkAccess = async (req, res) => {
                         hasAccess = true;
                         break;
                     }
-                    if (combo.testSeries.some(t => t._id.toString() === itemId)) {
+                    if (combo.testSeries.some(t => t && t._id.toString() === itemId)) {
                         hasAccess = true;
                         break;
                     }
