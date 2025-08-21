@@ -4,7 +4,7 @@ const TestSeries = require("../Models/TestSeries");
 
 /* ---------- EXISTING: create ---------- */
 exports.createTestSeries = async (req, res) => {
-  
+
   try {
     const {
       exam_id, title, title_tag, description,
@@ -244,7 +244,7 @@ exports.startEmbeddedTest = async (req, res) => {
     }
 
     // 2) Resolve user (hardcoded for testing)
-    const userId = "68a401107107449206aed555"; // replace with req.user._id later
+    const userId = req.user.id; // replace with req.user._id later
     log("userId (using hardcoded for now):", userId);
 
     // 3) Load series
@@ -391,7 +391,7 @@ const findByIdManual = (arr, id) =>
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
 const getUserIdFromReq = (req) => {
   const tokenUserId = req.user?.id || req.user?._id || req.user?.userId || req.user?.sub;
-  const fallback = "68a401107107449206aed555"; // <— testing fallback
+  const fallback = req.user.id; // <— testing fallback
   return String(tokenUserId || fallback);
 };
 const getSanitizer = (series) =>
@@ -519,7 +519,7 @@ exports.answerEmbeddedCurrent = async (req, res) => {
       log("ERR series not found");
       return res.status(404).json({ message: "Series not found" });
     }
-
+    
     series.attempts = clean(series.attempts);
     series.tests = clean(series.tests);
 
