@@ -48,28 +48,25 @@ exports.sendOtp = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { phone, otp } = req.body;
-    console.log("req.body =", req.body);
 
     if (!phone || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
 
     const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.otp !== Number(otp)) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
+    if (user.otp !== Number(otp)) return res.status(400).json({ message: "Invalid OTP" });
 
     if (user.otpExpiry && user.otpExpiry < Date.now()) {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    user.otp = null;
-    user.otpExpiry = null;
-    await user.save();
+    // ✅ Remove OTP from database after verification
+    await User.updateOne(
+      { phone },
+      { $unset: { otp: "", otpExpiry: "" } }  // removes both fields
+    );
 
     const token = jwt.sign(
       { id: user._id, phone: user.phone },
