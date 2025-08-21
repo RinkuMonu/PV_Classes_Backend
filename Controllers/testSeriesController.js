@@ -244,7 +244,7 @@ exports.startEmbeddedTest = async (req, res) => {
     }
 
     // 2) Resolve user (hardcoded for testing)
-    const userId = req.user.id; // replace with req.user._id later
+    const userId = req?.user?.id; // replace with req.user._id later
     log("userId (using hardcoded for now):", userId);
 
     // 3) Load series
@@ -391,7 +391,8 @@ const findByIdManual = (arr, id) =>
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
 const getUserIdFromReq = (req) => {
   const tokenUserId = req.user?.id || req.user?._id || req.user?.userId || req.user?.sub;
-  const fallback = req.user.id; // <— testing fallback
+  const fallback = req.user?.id; // <— testing fallback
+
   return String(tokenUserId || fallback);
 };
 const getSanitizer = (series) =>
@@ -415,8 +416,11 @@ exports.getCurrentEmbedded = async (req, res) => {
       return res.status(400).json({ message: "Invalid seriesId or attemptId" });
     }
 
-    const userId = getUserIdFromReq(req);
-    log("userId:", userId);
+    let userId = getUserIdFromReq(req);
+    if (!userId && req.user && req.user.id) {
+      userId = req.user.id;
+    }
+    console.log("userId ======= :", "1444444");
 
     const series = await TestSeries.findById(seriesId);
     if (!series) {
@@ -498,25 +502,24 @@ exports.answerEmbeddedCurrent = async (req, res) => {
   const log = (...a) => console.log(`[answerCurrent:${RID}]`, ...a);
 
   try {
-    log("START", req.method, req.originalUrl, "params:", req.params, "body:", req.body);
-
     const { seriesId, attemptId } = req.params || {};
     if (!seriesId || !attemptId) {
-      log("ERR missing params");
       return res.status(400).json({ message: "seriesId or attemptId missing" });
     }
     if (!validId(seriesId) || !validId(attemptId)) {
-      log("ERR invalid ObjectId");
       return res.status(400).json({ message: "Invalid seriesId or attemptId" });
     }
 
-    const userId = getUserIdFromReq(req);
+    // ✅ userId extract + fallback
+    const userId = getUserIdFromReq(req) ?? req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
     const { selectedOptions = [], numericAnswer } = req.body || {};
-    log("userId:", userId);
 
     const series = await TestSeries.findById(seriesId);
     if (!series) {
-      log("ERR series not found");
       return res.status(404).json({ message: "Series not found" });
     }
     
@@ -525,24 +528,22 @@ exports.answerEmbeddedCurrent = async (req, res) => {
 
     const attempt = findByIdManual(series.attempts, attemptId);
     if (!attempt) {
-      log("ERR attempt not found");
       return res.status(404).json({ message: "Attempt not found" });
     }
-    if (attempt.status !== "ongoing" || String(attempt.user_id) !== String(userId)) {
-      log("ERR attempt not active or user mismatch");
-      return res.status(404).json({ message: "Attempt not active" });
+
+    // ✅ attempt ke andar userId save karna (agar pehle se missing hai to)
+    if (!attempt.user_id) {
+      attempt.user_id = userId;
     }
 
     const test = findByIdManual(series.tests, attempt.test_id);
     if (!test) {
-      log("ERR test not found");
       return res.status(404).json({ message: "Test not found" });
     }
 
     const idx = Number(attempt.currentIndex || 0);
     const qOrder = Array.isArray(attempt.questionOrder) ? attempt.questionOrder : [];
     if (idx < 0 || idx >= qOrder.length) {
-      log("ERR pointer out of range", { idx, len: qOrder.length });
       return res.status(400).json({ message: "Current question pointer invalid" });
     }
 
@@ -550,11 +551,9 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     const qId = qOrder[idx];
     const q = findByIdManual(test.questions, qId);
     if (!q) {
-      log("ERR question not found", asStr(qId));
       return res.status(404).json({ message: "Question not found" });
     }
 
-    // Prepare response slot
     attempt.responses = Array.isArray(attempt.responses) ? attempt.responses : [];
     while (attempt.responses.length <= idx) attempt.responses.push({});
     const now = new Date();
@@ -565,14 +564,12 @@ exports.answerEmbeddedCurrent = async (req, res) => {
       test.perQuestionTimeSec || 30
     );
 
-    // Evaluate
     let isCorrect = false;
     if (q.type === "mcq_single" || q.type === "mcq_multi") {
       const corr = (q.correctOptions || []).slice().sort().join("|");
       const user = (selectedOptions || []).slice().sort().join("|");
       isCorrect = corr.length > 0 && corr === user;
     } else if (q.type === "numeric") {
-      // numericAnswer can be '', undefined -> not attempted
       if (numericAnswer !== undefined && numericAnswer !== null && String(numericAnswer) !== "") {
         isCorrect = Number(numericAnswer) === Number(q.correctNumeric);
       }
@@ -586,7 +583,9 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     const neg = Number(q.negativeMarks ?? 0);
     const marksAwarded = attempted ? (isCorrect ? marks : -neg) : 0;
 
+    // ✅ response ke andar bhi userId save karna
     Object.assign(attempt.responses[idx], {
+      user_id: userId,
       question_id: qId,
       selectedOptions: Array.isArray(selectedOptions) ? selectedOptions : [],
       numericAnswer: numericAnswer,
@@ -596,10 +595,8 @@ exports.answerEmbeddedCurrent = async (req, res) => {
       answeredAt: now
     });
 
-    // Move pointer
     attempt.currentIndex = idx + 1;
 
-    // Next question?
     if (attempt.currentIndex < qOrder.length) {
       const nextIdx = attempt.currentIndex;
       while (attempt.responses.length <= nextIdx) attempt.responses.push({});
@@ -620,7 +617,6 @@ exports.answerEmbeddedCurrent = async (req, res) => {
       });
     }
 
-    // Finish here
     const result = computeSummary(attempt);
     attempt.status = "submitted";
     Object.assign(attempt, result);
@@ -635,6 +631,7 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     console.log(`[answerCurrent:${RID}] END`);
   }
 };
+
 
 /* -------------------- FINISH (manual submit) -------------------- */
 exports.finishEmbeddedAttempt = async (req, res) => {
@@ -655,7 +652,7 @@ exports.finishEmbeddedAttempt = async (req, res) => {
     }
 
     const userId = getUserIdFromReq(req);
-    log("userId:", userId);
+    log("userId finish = :", userId);
 
     const series = await TestSeries.findById(seriesId);
     if (!series) {

@@ -1,9 +1,8 @@
 const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto"); // optional for randomness
+const crypto = require("crypto");
 const Order = require("../Models/Order");
 const axios = require("axios");
-
 exports.sendOtp = async (req, res) => {
   try {
     const { phone } = req.body;
