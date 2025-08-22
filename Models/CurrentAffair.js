@@ -13,6 +13,20 @@ const CurrentAffairSchema = new mongoose.Schema({
   status: { type: String, enum: ["draft", "published"], default: "draft" },
 }, { timestamps: true });
 
+// 🔍 Full text search
 CurrentAffairSchema.index({ title: "text", content: "text", tags: "text" });
+
+// 🖼️ Virtual field for full image URL
+CurrentAffairSchema.virtual("full_image").get(function () {
+  if (this.image) {
+    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+    return `${baseUrl}/uploads/currentAffairs/${this.image}`;
+  }
+  return null;
+});
+
+// Include virtuals when converting to JSON / Object
+CurrentAffairSchema.set("toJSON", { virtuals: true });
+CurrentAffairSchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("CurrentAffair", CurrentAffairSchema);

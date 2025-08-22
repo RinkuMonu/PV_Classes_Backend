@@ -1,76 +1,79 @@
 const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto"); // optional for randomness
+const crypto = require("crypto");
 const Order = require("../Models/Order");
-
-exports.getOtp = async (req, res) => {
+const axios = require("axios");
+exports.sendOtp = async (req, res) => {
   try {
-    const { phone, referral_code } = req.body;
+    const { phone } = req.body;
 
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    const otp = Math.floor(10000 + Math.random() * 90000); // integer OTP
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Build update data
-    const updateData = { phone, otp };
-    if (referral_code) updateData.referral_code = referral_code;
-
-    // Update or create user
-    const user = await User.findOneAndUpdate(
+    // Save or update user with OTP only
+    await User.findOneAndUpdate(
       { phone },
-      { $set: updateData },
-      { new: true, upsert: true }
+      { phone, otp },
+      { upsert: true, new: true }
+    );
+
+    // Send OTP using Fast2SMS
+    const response = await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        route: "q",
+        message: `Your OTP is ${otp}`,
+        numbers: phone,
+      },
+      {
+        headers: {
+          authorization: process.env.FAST2SMS_API_KEY,
+        },
+      }
     );
 
     res.status(200).json({
       message: "OTP sent successfully",
-      data: {
-        phone: user.phone,
-        referral_code: user.referral_code || null,
-        otp
-      }
+      response: response.data,
     });
-
   } catch (error) {
-    console.error("Get OTP Error:", error);
-    res.status(500).json({
-      message: "Internal server error",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Error sending OTP", error: error.message });
   }
 };
+
 exports.loginUser = async (req, res) => {
   try {
     const { phone, otp } = req.body;
-    console.log("req.body =", req.body);
+
     if (!phone || !otp) {
       return res.status(400).json({ message: "Mobile number and OTP are required" });
     }
 
     const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (user.otp !== Number(otp)) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
+    if (user.otp !== Number(otp)) return res.status(400).json({ message: "Invalid OTP" });
 
     if (user.otpExpiry && user.otpExpiry < Date.now()) {
       return res.status(400).json({ message: "OTP expired" });
     }
 
-    user.otp = null;
-    user.otpExpiry = null;
-    await user.save();
+    // ✅ Remove OTP from database after verification
+    await User.updateOne(
+      { phone },
+      { $unset: { otp: "", otpExpiry: "" } }  // removes both fields
+    );
 
     const token = jwt.sign(
       { id: user._id, phone: user.phone },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
+
     res.status(200).json({
       message: "Login successful",
       token,
@@ -82,6 +85,7 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.getUserData = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
@@ -102,6 +106,7 @@ exports.getUserData = async (req, res) => {
     });
   }
 };
+
 exports.updateUser = async (req, res) => {
   try {
     const { name, email, phone,address,city,state,pincode} = req.body; // form-data text fields
@@ -141,6 +146,7 @@ exports.updateUser = async (req, res) => {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
+
 exports.getAllUserData = async (req, res) => {
   try {
     const users = await User.find(); // fetch all users
@@ -156,6 +162,7 @@ exports.getAllUserData = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 exports.updateUserStatus = async (req, res) => {
   try {
     const { userId } = req.body; // or req.params.userId if you want
@@ -184,6 +191,63 @@ exports.updateUserStatus = async (req, res) => {
   }
 };
 
+// exports.getMyPurchases = async (req, res) => {
+//   try {
+//     const userId = req.user.id;
+
+//     const orders = await Order.find({
+//       user: userId,
+//       orderStatus: "completed"
+//     })
+//       .populate("courses.course")
+//       .populate("books.book")
+//       .populate("testSeries.test")
+//       .sort({ createdAt: -1 });
+
+//     const purchasedCourses = [];
+//     const purchasedBooks = [];
+//     const purchasedTestSeries = [];
+
+//     orders.forEach(order => {
+//       // 🟢 Courses
+//       order.courses.forEach(c => {
+//         if (c.course) {
+//           purchasedCourses.push(
+//             c.course
+//           );
+//         }
+//       });
+
+//       // 🟢 Books
+//       order.books.forEach(b => {
+//         if (b.book) {
+//           purchasedBooks.push(
+//             b.book
+//           );
+//         }
+//       });
+
+//       // 🟢 Test Series
+//       order.testSeries.forEach(t => {
+//         if (t.test) {
+//           purchasedTestSeries.push(
+//             t.test
+//           );
+//         }
+//       });
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       items: { purchasedCourses, purchasedBooks, purchasedTestSeries }
+//     });
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 exports.getMyPurchases = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -192,7 +256,11 @@ exports.getMyPurchases = async (req, res) => {
       user: userId,
       orderStatus: "completed"
     })
-      .populate("courses.course")
+      .populate({
+        path: "courses.course",
+        populate: { path: "comboId", populate: ["books", "testSeries","pyqs"] } // ✅ combo ke andar books aur test series bhi
+        
+      })
       .populate("books.book")
       .populate("testSeries.test")
       .sort({ createdAt: -1 });
@@ -205,28 +273,37 @@ exports.getMyPurchases = async (req, res) => {
       // 🟢 Courses
       order.courses.forEach(c => {
         if (c.course) {
-          purchasedCourses.push(
-            c.course
-          );
+          purchasedCourses.push(c.course);
+
+          // ✅ Agar course me combo hai to uske items bhi add karo
+          if (c.course.comboId) {
+            const combo = c.course.comboId;
+
+            // Combo books
+            if (combo.books?.length > 0) {
+              combo.books.forEach(b => {
+                if (b) purchasedBooks.push(b);
+              });
+            }
+
+            // Combo testSeries
+            if (combo.testSeries?.length > 0) {
+              combo.testSeries.forEach(t => {
+                if (t) purchasedTestSeries.push(t);
+              });
+            }
+          }
         }
       });
 
-      // 🟢 Books
+      // 🟢 Standalone Books
       order.books.forEach(b => {
-        if (b.book) {
-          purchasedBooks.push(
-            b.book
-          );
-        }
+        if (b.book) purchasedBooks.push(b.book);
       });
 
-      // 🟢 Test Series
+      // 🟢 Standalone Test Series
       order.testSeries.forEach(t => {
-        if (t.test) {
-          purchasedTestSeries.push(
-            t.test
-          );
-        }
+        if (t.test) purchasedTestSeries.push(t.test);
       });
     });
 
@@ -236,6 +313,7 @@ exports.getMyPurchases = async (req, res) => {
     });
 
   } catch (error) {
+    console.error("❌ Error in getMyPurchases:", error);
     res.status(500).json({ error: error.message });
   }
 };
