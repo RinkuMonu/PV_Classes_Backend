@@ -12,6 +12,7 @@ const ComboSchema = new mongoose.Schema(
         status: { type: String, enum: ["active", "inactive"], default: "active" },
 
         // Relations
+        course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
         books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
         testSeries: [{ type: mongoose.Schema.Types.ObjectId, ref: "TestSeries" }],
         pyqs: [{ type: mongoose.Schema.Types.ObjectId, ref: "PYQ" }],
