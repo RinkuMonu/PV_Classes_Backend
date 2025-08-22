@@ -81,6 +81,7 @@ export const getCoupon = async (req, res) => {
 
 // Update coupon
 export const updateCoupon = async (req, res) => {
+  const userId = req.user.id;
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -101,7 +102,10 @@ export const updateCoupon = async (req, res) => {
 
         const coupon = await Coupon.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            {
+              ...req.body,
+              $addToSet: { usedBy: userId },
+            },
             { new: true, runValidators: true }
         );
 

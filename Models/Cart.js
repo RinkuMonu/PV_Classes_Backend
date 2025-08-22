@@ -1,5 +1,21 @@
 const mongoose = require("mongoose");
 
+const comboItemSchema = new mongoose.Schema(
+  {
+    itemType: {
+      type: String,
+      enum: ["book", "testSeries", "pyq"], // combo me sirf ye hi ho sakte
+      required: true,
+    },
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    quantity: { type: Number, default: 1 },
+  },
+  { _id: false }
+);
+
 const cartItemSchema = new mongoose.Schema(
   {
     itemType: {
@@ -12,6 +28,7 @@ const cartItemSchema = new mongoose.Schema(
       required: true,
     },
     quantity: { type: Number, default: 1 },
+    comboItems: [comboItemSchema],
   },
   { _id: false }
 );

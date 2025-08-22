@@ -18,7 +18,7 @@ exports.checkout = async (req, res) => {
         });
 
         const { courses, books, testSeries } = grouped;
-        const { user, paymentMethod, total } = req.body;
+        const { user, paymentMethod, totalAmount,couponId } = req.body;
 
         const address = {
             street: user.address,
@@ -28,7 +28,7 @@ exports.checkout = async (req, res) => {
             country: user.country || "India" 
         };
 
-        if ((!courses.length && !books.length && !testSeries.length) || !user || !paymentMethod || !total) {
+        if ((!courses.length && !books.length && !testSeries.length) || !user || !paymentMethod || !totalAmount) {
             return res.status(400).json({ message: "At least one item and all fields are required!" });
         }
 
@@ -39,13 +39,12 @@ exports.checkout = async (req, res) => {
             books,
             testSeries,
             address,
-            totalAmount: total,
+            totalAmount: totalAmount,
             paymentMethod,
             paymentStatus: "pending",
             orderStatus: "processing"
         });
-        await order.save();
-
+        await order.save();        
         // Step 3: Grant Access for Courses (+ Combo)
         for (const c of courses) {
             const course = await Course.findById(c.course).populate("comboId");
