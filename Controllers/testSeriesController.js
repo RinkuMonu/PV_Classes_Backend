@@ -90,8 +90,7 @@ exports.getByExam = async (req, res) => {
 /* ---------- EXISTING: by id ---------- */
 exports.getTestSeriesById = async (req, res) => {
   try {
-    const userId = req?.user?.id; // ✅ safe access
-
+    const userId = req?.user?.id;
     const series = await TestSeries.findById(req.params.id)
       .populate("exam_id", "name")
       .lean();
@@ -100,7 +99,6 @@ exports.getTestSeriesById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Test Series not found" });
     }
 
-    // ✅ Agar userId hai to filter karo, warna saare attempts dikhne do
     if (userId) {
       series.attempts = Array.isArray(series.attempts)
         ? series.attempts.filter((a) => String(a.user_id) === String(userId))
@@ -399,12 +397,6 @@ exports.startEmbeddedTest = async (req, res) => {
     console.log(`[startEmbeddedTest:${RID}] ----- END -----`);
   }
 };
-
-
-
-
-
-
 
 
 const clean = (arr) => (Array.isArray(arr) ? arr.filter(Boolean) : []);
