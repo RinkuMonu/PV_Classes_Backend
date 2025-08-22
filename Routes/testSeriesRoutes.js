@@ -13,7 +13,7 @@ router.post(
 );
 
 // Read
-router.get("/", verifyToken,testSeriesController.getAllTestSeries);
+router.get("/",testSeriesController.getAllTestSeries);
 router.get("/exam/:examId", testSeriesController.getByExam);
 router.get("/:id",verifyToken, testSeriesController.getTestSeriesById);
 
@@ -47,5 +47,5 @@ router.post("/:seriesId/attempts/:attemptId/answer",verifyToken, testSeriesContr
 
 // Finish now
 router.post("/:seriesId/attempts/:attemptId/finish",verifyToken, testSeriesController.finishEmbeddedAttempt);
-
+router.get("/get-answer-sheet/:id",verifyToken, testSeriesController.getAnswerSheet);
 module.exports = router;

@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-const AddressSchema = new mongoose.Schema({
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true },
-}, { _id: false });
+// const AddressSchema = new mongoose.Schema({
+//     street: { type: String, required: true },
+//     city: { type: String, required: true },
+//     state: { type: String, required: true },
+//     postalCode: { type: String, required: true },
+//     country: { type: String, required: true },
+// }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({
     user: {
@@ -36,10 +36,10 @@ const OrderSchema = new mongoose.Schema({
         }
     ],
 
-    address: {
-        type: AddressSchema,
-        required: true
-    },
+    // address: {
+    //     type: AddressSchema,
+    //     required: true
+    // },
     paymentMethod: {
         type: String,
         enum: ["card", "upi", "netbanking", "cod"],

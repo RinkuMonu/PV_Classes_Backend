@@ -18,15 +18,15 @@ exports.checkout = async (req, res) => {
         });
 
         const { courses, books, testSeries } = grouped;
-        const { user, paymentMethod, totalAmount,couponId } = req.body;
+        const { paymentMethod, totalAmount,couponId } = req.body;
 
-        const address = {
-            street: user.address,
-            city: user.city,
-            state: user.state,
-            postalCode: user.pincode,
-            country: user.country || "India" 
-        };
+        // const address = {
+        //     street: user.address,
+        //     city: user.city,
+        //     state: user.state,
+        //     postalCode: user.pincode,
+        //     country: user.country || "India" 
+        // };
 
         if ((!courses.length && !books.length && !testSeries.length) || !user || !paymentMethod || !totalAmount) {
             return res.status(400).json({ message: "At least one item and all fields are required!" });
@@ -38,7 +38,6 @@ exports.checkout = async (req, res) => {
             courses,
             books,
             testSeries,
-            address,
             totalAmount: totalAmount,
             paymentMethod,
             paymentStatus: "pending",

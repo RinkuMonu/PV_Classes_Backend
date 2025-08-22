@@ -90,8 +90,7 @@ exports.getByExam = async (req, res) => {
 /* ---------- EXISTING: by id ---------- */
 exports.getTestSeriesById = async (req, res) => {
   try {
-    const userId = req.user.id; // ✅ sirf isse hi lena hai
-
+    const userId = req?.user?.id;
     const series = await TestSeries.findById(req.params.id)
       .populate("exam_id", "name")
       .lean();
@@ -100,10 +99,11 @@ exports.getTestSeriesById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Test Series not found" });
     }
 
-    // ✅ attempts filter karo
-    series.attempts = Array.isArray(series.attempts)
-      ? series.attempts.filter((a) => String(a.user_id) === String(userId))
-      : [];
+    if (userId) {
+      series.attempts = Array.isArray(series.attempts)
+        ? series.attempts.filter((a) => String(a.user_id) === String(userId))
+        : [];
+    }
 
     res.status(200).json({ success: true, message: "Fetched", data: series });
   } catch (err) {
@@ -114,6 +114,7 @@ exports.getTestSeriesById = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -728,3 +729,82 @@ function computeSummary(attempt) {
     totalQuestions: Array.isArray(attempt.questionOrder) ? attempt.questionOrder.length : 0
   };
 }
+
+exports.getAnswerSheet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = getUserIdFromReq(req) || req.user.id;
+    console.log("userId answer sheet = :", userId);
+
+    if (!validId(id)) {
+      return res.status(400).json({ message: "Invalid testSeriesId" });
+    }
+
+    const series = await TestSeries.findById(id);
+    if (!series) {
+      return res.status(404).json({ message: "Series not found" });
+    }
+
+    // ✅ Sirf current user ke attempts lo
+    const userAttempts = Array.isArray(series.attempts)
+      ? series.attempts.filter(a => String(a.user_id) === String(userId))
+      : [];
+
+    // ✅ Test ke sath matching attempt attach karo
+    const testsWithAttempts = series.tests.map(test => {
+      const attemptsForTest = userAttempts.filter(
+        a => String(a.test_id) === String(test._id)
+      );
+
+      // ✅ Latest attempt nikalo (agar multiple ho to)
+      const latestAttempt = attemptsForTest.length
+        ? attemptsForTest.reduce((latest, attempt) =>
+            new Date(attempt.createdAt) > new Date(latest.createdAt) ? attempt : latest
+          )
+        : null;
+
+      // ✅ Agar attempt mila to uske responses ko questions me merge karo
+      const questionsWithAttempts = test.questions.map(q => {
+        const response = latestAttempt?.responses?.find(
+          r => String(r.question_id) === String(q._id)
+        );
+
+        return {
+          ...q.toObject?.() || q,
+          attemptResponse: response || null
+        };
+      });
+
+      return {
+        ...test.toObject?.() || test,
+        questions: questionsWithAttempts,
+        attempt: latestAttempt
+          ? {
+              totalMarks: latestAttempt.totalMarks,
+              correctCount: latestAttempt.correctCount,
+              wrongCount: latestAttempt.wrongCount,
+              unattemptedCount: latestAttempt.unattemptedCount,
+              createdAt: latestAttempt.createdAt
+            }
+          : null
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        ...series.toObject(),
+        tests: testsWithAttempts, // ab har test ke andar attempt + merged questions honge
+        attempts: undefined // original attempts array chhupane ke liye
+      }
+    });
+  } catch (e) {
+    console.error("ERROR in getAnswerSheet:", e?.stack || e);
+    return res.status(500).json({ message: e.message || "Internal Server Error" });
+  }
+};
+
+
+
+
+
