@@ -1,4 +1,4 @@
-// const Course = require("../Models/Course");
+const Course = require("../Models/Course");
 
 // exports.createCourse = async (req, res) => {
 //   try {
@@ -163,7 +163,6 @@
 //     });
 //   }
 // };
-const Course = require("../Models/Course");
 
 // 📌 Create Course
 exports.createCourse = async (req, res) => {

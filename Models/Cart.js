@@ -4,7 +4,7 @@ const comboItemSchema = new mongoose.Schema(
   {
     itemType: {
       type: String,
-      enum: ["book", "testSeries", "pyq"], // combo me sirf ye hi ho sakte
+      enum: ["course", "pyq", "testSeries", "book", "combo"],
       required: true,
     },
     itemId: {
