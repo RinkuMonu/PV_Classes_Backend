@@ -28,7 +28,7 @@ exports.checkout = async (req, res) => {
         //     country: user.country || "India" 
         // };
 
-        if ((!courses.length && !books.length && !testSeries.length) || !user || !paymentMethod || !totalAmount) {
+        if ((!courses.length && !books.length && !testSeries.length) || !paymentMethod || !totalAmount) {
             return res.status(400).json({ message: "At least one item and all fields are required!" });
         }
 

@@ -51,7 +51,7 @@ const CourseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-CourseSchema.virtual("imagesFullPath").get(function () {
+CourseSchema.virtual("full_image").get(function () {
   if (!this.images) return [];
   return this.images.map(
     (img) => `${process.env.BASE_URL}/uploads/course/${img}`
