@@ -64,7 +64,7 @@ exports.getCart = async (req, res) => {
         let productData = null;
 
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId).populate("category_id");
+          productData = await Course.findById(item.itemId).populate("exam");
         } else if (item.itemType === "book") {
           productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
@@ -109,7 +109,10 @@ exports.getCart = async (req, res) => {
           }
         }
 
-        return { ...item.toObject(), details: productData };
+        return { 
+          ...item.toObject(), 
+          details: productData ? productData.toJSON() : null,
+         };
       })
     );
 
