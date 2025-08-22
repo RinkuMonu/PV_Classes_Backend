@@ -58,7 +58,7 @@ exports.getCart = async (req, res) => {
       });
     }
 
-    // ✅ Populate with full data (virtuals auto included)
+    // ✅ Populate each item
     const populatedItems = await Promise.all(
       cart.items.map(async (item) => {
         let productData = null;
@@ -73,9 +73,7 @@ exports.getCart = async (req, res) => {
           productData = await PYQ.findById(item.itemId);
         }else if( item.itemType === "combo"){
           productData = await Combo.findById(item.itemId);
-        }
-
-
+        } 
         return { 
           ...item.toObject(), 
           details: productData ? productData.toJSON() : null,
