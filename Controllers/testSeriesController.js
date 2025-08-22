@@ -379,12 +379,6 @@ exports.startEmbeddedTest = async (req, res) => {
 };
 
 
-
-
-
-
-
-
 const clean = (arr) => (Array.isArray(arr) ? arr.filter(Boolean) : []);
 const findByIdManual = (arr, id) =>
   (Array.isArray(arr) ? arr : []).find((x) => x && x._id && String(x._id) === String(id));
