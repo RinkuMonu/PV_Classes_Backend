@@ -71,7 +71,10 @@ exports.getCart = async (req, res) => {
           productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
+        }else if( item.itemType === "combo"){
+          productData = await Combo.findById(item.itemId);
         }
+
 
         return { 
           ...item.toObject(), 
