@@ -71,44 +71,9 @@ exports.getCart = async (req, res) => {
           productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
-        } else if (item.itemType === "combo") {
-          // ✅ Combo ka case
-          productData = await Combo.findById(item.itemId)
-            .populate("courses")
-            .populate("books")
-            .populate("testSeries")
-            .populate("pyqs");
-
-          if (productData) {
-            // Flatten karke dikhane ke liye: alag-alag items bana do
-            const expandedComboItems = [];
-
-            if (productData.courses) {
-              productData.courses.forEach((course) => {
-                expandedComboItems.push({ itemType: "course", details: course });
-              });
-            }
-            if (productData.books) {
-              productData.books.forEach((book) => {
-                expandedComboItems.push({ itemType: "book", details: book });
-              });
-            }
-            if (productData.testSeries) {
-              productData.testSeries.forEach((test) => {
-                expandedComboItems.push({ itemType: "testSeries", details: test });
-              });
-            }
-            if (productData.pyqs) {
-              productData.pyqs.forEach((pyq) => {
-                expandedComboItems.push({ itemType: "pyq", details: pyq });
-              });
-            }
-
-            // combo ke andar ke items details ke sath wapas bhejo
-            return { ...item.toObject(), details: productData, expandedItems: expandedComboItems };
-          }
-        }
-
+        }else if( item.itemType === "combo"){
+          productData = await Combo.findById(item.itemId);
+        } 
         return { 
           ...item.toObject(), 
           details: productData ? productData.toJSON() : null,
