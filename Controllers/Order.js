@@ -6,7 +6,7 @@ exports.checkout = async (req, res) => {
     try {
         const userId = req.user.id;
         // Step 1: Transform cart by itemType
-        const grouped = { courses: [], books: [], testSeries: [] };
+        const grouped = { courses: [], books: [], testSeries: [], combo: [] };
         req.body.cart.forEach(item => {
             if (item.itemType === "course") {
                 grouped.courses.push({ course: item.itemId, quantity: item.quantity });
@@ -14,10 +14,12 @@ exports.checkout = async (req, res) => {
                 grouped.books.push({ book: item.itemId, quantity: item.quantity });
             } else if (item.itemType === "testSeries") {
                 grouped.testSeries.push({ test: item.itemId, quantity: item.quantity });
+            }else if (item.itemType === "combo") {
+                grouped.combo.push({ combo: item.itemId, quantity: item.quantity });
             }
         });
 
-        const { courses, books, testSeries } = grouped;
+        const { courses, books, testSeries,combo } = grouped;
         const { paymentMethod, totalAmount,couponId } = req.body;
 
         // const address = {
@@ -28,7 +30,7 @@ exports.checkout = async (req, res) => {
         //     country: user.country || "India" 
         // };
 
-        if ((!courses.length && !books.length && !testSeries.length) || !paymentMethod || !totalAmount) {
+        if ((!courses.length && !books.length && !testSeries.length && !combo.length) || !paymentMethod || !totalAmount) {
             return res.status(400).json({ message: "At least one item and all fields are required!" });
         }
 
@@ -38,6 +40,7 @@ exports.checkout = async (req, res) => {
             courses,
             books,
             testSeries,
+            combo,
             totalAmount: totalAmount,
             paymentMethod,
             paymentStatus: "pending",

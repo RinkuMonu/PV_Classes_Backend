@@ -35,7 +35,11 @@ const OrderSchema = new mongoose.Schema({
             test: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries", required: true }
         }
     ],
-
+    combo:[
+        {
+            combo: { type: mongoose.Schema.Types.ObjectId, ref: "Combo", required: true }
+        }
+    ],
     // address: {
     //     type: AddressSchema,
     //     required: true
