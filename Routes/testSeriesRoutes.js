@@ -15,7 +15,7 @@ router.post(
 // Read
 router.get("/",testSeriesController.getAllTestSeries);
 router.get("/exam/:examId", testSeriesController.getByExam);
-router.get("/:id",verifyToken, testSeriesController.getTestSeriesById);
+router.get("/:id", testSeriesController.getTestSeriesById);
 
 // Update (FIXED field name)
 router.put(
