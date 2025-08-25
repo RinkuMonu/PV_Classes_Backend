@@ -34,7 +34,7 @@ router.put(
     courseController.updateCourse
 );
 
-// Delete course
+// Delete course 
 router.delete("/:id", courseController.deleteCourse);
 
 router.post(
