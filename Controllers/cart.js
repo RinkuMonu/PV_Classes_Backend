@@ -3,7 +3,7 @@ const Course = require("../Models/Course");
 const Book = require("../Models/Book");
 const PYQ = require("../Models/Pyqs");
 const TestSeries = require("../Models/TestSeries");
-
+const Combo = require("../Models/Combo");
 async function getItemPrice(itemType, itemId) {
     let price = 0;
     switch (itemType) {
@@ -72,7 +72,7 @@ exports.getCart = async (req, res) => {
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
         }else if( item.itemType === "combo"){
-          productData = await Combo.findById(item.itemId);
+          productData = await Combo.findById(item.itemId).populate("pyqs").populate("books").populate("testSeries").populate("course");
         } 
         return { 
           ...item.toObject(), 
