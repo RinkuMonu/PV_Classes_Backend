@@ -384,6 +384,7 @@ exports.uploadCourseVideo = async (req, res) => {
   }
 };
 
+
 exports.updateCourseVideo = async (req, res) => {
   try {
     const { courseId, videoId } = req.params;
