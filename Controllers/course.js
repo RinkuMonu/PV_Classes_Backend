@@ -218,6 +218,7 @@ exports.getCourses = async (req, res) => {
 
     let query = Course.find(filter)
       .populate("exam")
+      .populate("faculty")
       .populate("author", "name experience profile_image_url specialization")
       .populate({
         path: "comboId",
@@ -265,6 +266,7 @@ exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate("exam")
+      .populate("faculty")
       .populate("author", "name experience profile_image_url specialization")
       .populate({
         path: "comboId",

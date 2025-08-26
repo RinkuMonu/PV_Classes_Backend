@@ -23,6 +23,9 @@ const CourseSchema = new mongoose.Schema(
     exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
     type: { type: String, enum: ["Test Series", "Course"], required: true },
     price: { type: Number, default: 0 },
+    faculty: [
+  { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }
+],
     discountPrice: { type: Number, default: 0 },
     isFree: { type: Boolean, default: false },
     validity: { type: String },

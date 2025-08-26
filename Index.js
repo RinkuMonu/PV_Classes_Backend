@@ -30,8 +30,8 @@ const faqRoutes = require("./Routes/faqRoutes");
 
 const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
-const CourseDetailRoute = require("./Routes/courseDetails");
 const checkoutRouter = require("./Routes/Order");
+const facultyRoute = require("./Routes/faculty");
 
 const app = express();
 app.use(cors());
@@ -51,7 +51,7 @@ app.use("/api/categories", categoriesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
-app.use("/api/coursedetails", CourseDetailRoute);
+app.use("/api/faculty", facultyRoute);
 app.use("/api/courses", CoursesRoute);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/wishlist", wishlistRoutes);
