@@ -185,7 +185,7 @@ exports.createCourse = async (req, res) => {
     if (features) courseData.features = Array.isArray(features) ? features : features.split(",");
 
     if (req.files && req.files.length > 0) {
-      courseData.images = req.files.map(file => `${file.filename}`);
+      courseData.images = req.files.map(file => `/uploads/course/${file.filename}`);
     }
 
     // 👇 Only comboId
@@ -307,7 +307,7 @@ exports.updateCourse = async (req, res) => {
   try {
     let courseData = req.body;
     if (req.file) {
-      courseData.image = `/uploads/course/${req.file.filename}`;
+      courseData.images = [`/uploads/course/${req.file.filename}`];
     }
     if (courseData.topics) {
       courseData.topics = Array.isArray(courseData.topics) ? courseData.topics : courseData.topics.split(",");
