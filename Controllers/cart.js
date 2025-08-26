@@ -123,20 +123,25 @@ exports.getStorageCart = async (req, res) => {
         let productData = null;
 
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId).populate("category_id");
+          productData = await Course.findById(item.itemId).populate("exam");
         } else if (item.itemType === "book") {
           productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
           productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
-        }
-
-        // productData.toJSON() => virtuals include honge
-        return {
-          ...item,
+        }else if( item.itemType === "combo"){
+          productData = await Combo.findById(item.itemId).populate([
+            "pyqs",
+            "books",
+            "testSeries",
+            "course"
+          ]);
+        } 
+        return { 
+          ...item, 
           details: productData ? productData.toJSON() : null,
-        };
+         };
       })
     );
 
