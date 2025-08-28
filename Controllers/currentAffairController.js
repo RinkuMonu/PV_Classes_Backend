@@ -28,7 +28,8 @@ exports.createCurrentAffair = async (req, res) => {
     let imagePath = "";
     if (req.file) {
       // 🔥 FIXED: path schema ke virtual se match ho
-      imagePath = `uploads/currentaffair/${req.file.filename}`;
+      // imagePath = `uploads/currentaffair/${req.file.filename}`;
+      imagePath = `${req.file.filename}`;
     }
 
     const postData = {
