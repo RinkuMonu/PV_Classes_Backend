@@ -32,6 +32,7 @@ const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
 const checkoutRouter = require("./Routes/Order");
 const facultyRoute = require("./Routes/faculty");
+const notesRoute = require("./Routes/noteRoutes");
 
 const app = express();
 app.use(cors());
@@ -70,6 +71,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/checkout",checkoutRouter);
 app.use("/api/access", accessRoutes);
 app.use("/api/faq", faqRoutes);
+app.use("/api/test", notesRoute);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
