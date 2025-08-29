@@ -71,7 +71,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/checkout",checkoutRouter);
 app.use("/api/access", accessRoutes);
 app.use("/api/faq", faqRoutes);
-app.use("/api/test", notesRoute);
+app.use("/api/notes", notesRoute);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
