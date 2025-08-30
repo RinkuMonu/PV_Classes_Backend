@@ -171,14 +171,14 @@ exports.createCourse = async (req, res) => {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
       shortDescription, longDescription, status,
-      comboId, videos
+      comboId, videos, faculty
     } = req.body;
 
     let courseData = {
       title, slug, exam, type, author, language,
       mainMotive, price, discount_price,
       isFree, validity, shortDescription,
-      longDescription, status
+      longDescription, status, faculty
     };
 
     if (topics) courseData.topics = Array.isArray(topics) ? topics : topics.split(",");
