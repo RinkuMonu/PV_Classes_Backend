@@ -28,10 +28,10 @@ router.get("/:id", courseController.getCourseById);
 
 // Update course with file upload
 router.put(
-    "/:id",
-    setCourseUploadFolder,
-    uploadcourse.single("courseImage"),
-    courseController.updateCourse
+  "/:id",
+  setCourseUploadFolder,
+  uploadcourse.array("images", 5),   // field = "images"
+  courseController.updateCourse
 );
 
 // Delete course 

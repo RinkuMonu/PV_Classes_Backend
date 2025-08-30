@@ -206,7 +206,6 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-// 📌 Get all courses
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
@@ -304,12 +303,11 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-// 📌 Update Course
 exports.updateCourse = async (req, res) => {
   try {
     let courseData = req.body;
-    if (req.file) {
-      courseData.images = [`${req.file.filename}`];
+    if (req.files && req.files.length > 0) {
+      courseData.images = req.files.map(file => file.filename);
     }
     if (courseData.topics) {
       courseData.topics = Array.isArray(courseData.topics) ? courseData.topics : courseData.topics.split(",");
@@ -327,7 +325,6 @@ exports.updateCourse = async (req, res) => {
   }
 };
 
-// 📌 Delete Course
 exports.deleteCourse = async (req, res) => {
   try {
     const course = await Course.findByIdAndDelete(req.params.id);
@@ -385,7 +382,6 @@ exports.uploadCourseVideo = async (req, res) => {
     res.status(500).json({ message: "Video upload failed", error: error.message });
   }
 };
-
 
 exports.updateCourseVideo = async (req, res) => {
   try {
