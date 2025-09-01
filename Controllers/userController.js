@@ -1,8 +1,69 @@
 const User = require("../Models/User");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const Order = require("../Models/Order");
 const axios = require("axios");
+
+const generateToken = (user) => {
+  return jwt.sign(
+    { id: user._id, phone: user.phone },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+};
+
+exports.register = async (req, res) => {
+  try {
+    const { name, phone, password } = req.body;
+
+    if (!name || !phone || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const existingUser = await User.findOne({ phone });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({ name, phone, password: hashedPassword });
+    await user.save();
+
+    res.status(201).json({
+      message: "User registered successfully",
+      token: generateToken(user),
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Registration failed", error: error.message });
+  }
+};
+
+exports.login = async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    res.status(200).json({
+      message: "Login successful",
+      token: generateToken(user),
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Login failed", error: error.message });
+  }
+};
+
 exports.sendOtp = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -14,15 +75,17 @@ exports.sendOtp = async (req, res) => {
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000);
 
-    // Save or update user with OTP only
-    await User.findOneAndUpdate(
-      { phone },
-      { phone, otp },
-      { upsert: true, new: true }
-    );
+    // Save OTP temporarily in user DB
+    let user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.otp = otp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000; // 5 min
+    await user.save();
 
-    // Send OTP using Fast2SMS
-    const response = await axios.post(
+    // Send OTP via Fast2SMS
+    await axios.post(
       "https://www.fast2sms.com/dev/bulkV2",
       {
         route: "q",
@@ -36,53 +99,72 @@ exports.sendOtp = async (req, res) => {
       }
     );
 
-    res.status(200).json({
-      message: "OTP sent successfully",
-      response: response.data,
-    });
+    res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error sending OTP", error: error.message });
   }
 };
 
-exports.loginUser = async (req, res) => {
+exports.forgotPassword = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
-
-    if (!phone || !otp) {
-      return res.status(400).json({ message: "Mobile number and OTP are required" });
-    }
+    const { phone } = req.body;
 
     const user = await User.findOne({ phone });
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (user.otp !== Number(otp)) return res.status(400).json({ message: "Invalid OTP" });
-
-    if (user.otpExpiry && user.otpExpiry < Date.now()) {
-      return res.status(400).json({ message: "OTP expired" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ Remove OTP from database after verification
-    await User.updateOne(
-      { phone },
-      { $unset: { otp: "", otpExpiry: "" } }  // removes both fields
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    user.otp = otp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    // Send OTP via Fast2SMS
+    await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        route: "q",
+        message: `Your password reset OTP is ${otp}`,
+        numbers: phone,
+      },
+      {
+        headers: {
+          authorization: process.env.FAST2SMS_API_KEY,
+        },
+      }
     );
 
-    const token = jwt.sign(
-      { id: user._id, phone: user.phone },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
-    );
-
-    res.status(200).json({
-      message: "Login successful",
-      token,
-      userId: user._id
-    });
-
+    res.status(200).json({ message: "OTP sent for password reset" });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Error in forgot password", error: error.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { phone, otp, newPassword } = req.body;
+
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.otp !== otp || user.otpExpires < Date.now()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // Clear OTP
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ message: "Error resetting password", error: error.message });
   }
 };
 
@@ -109,7 +191,7 @@ exports.getUserData = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const { name, email, phone,address,city,state,pincode} = req.body; // form-data text fields
+    const { name, email, phone, address, city, state, pincode } = req.body; // form-data text fields
     const userId = req.user.id;
 
     const updateData = {};
@@ -258,8 +340,8 @@ exports.getMyPurchases = async (req, res) => {
     })
       .populate({
         path: "courses.course",
-        populate: { path: "comboId", populate: ["books", "testSeries","pyqs"] } // ✅ combo ke andar books aur test series bhi
-        
+        populate: { path: "comboId", populate: ["books", "testSeries", "pyqs"] } // ✅ combo ke andar books aur test series bhi
+
       })
       .populate("books.book")
       .populate("testSeries.test")
