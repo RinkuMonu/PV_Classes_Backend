@@ -18,10 +18,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 Compress Backend Code (exclude storage, node_modules)
-        run: tar --exclude='./storage' --exclude='./node_modules' --exclude='.DS_Store' --exclude='./.git' -czvf backend.tar.gz . || true
-
-
+      - name: 📦 Compress Backend Code (exclude storage, node_modules, git)
+        run: |
+          tar --exclude='./storage' \
+              --exclude='./node_modules' \
+              --exclude='.DS_Store' \
+              --exclude='./.git' \
+              -czvf backend.tar.gz .
 
       - name: 🚀 Upload to Server via SCP
         uses: appleboy/scp-action@master
@@ -32,6 +35,7 @@ jobs:
           port: ${{ secrets.BACKEND_SSH_PORT }}
           source: "backend.tar.gz"
           target: "/home/apipvcl/"
+          tar: false   # Prevents auto-extraction on the server
 
       - name: 🔐 SSH Deploy with .env Safety
         uses: appleboy/ssh-action@master
@@ -41,6 +45,8 @@ jobs:
           password: ${{ secrets.BACKEND_SSH_PASSWORD }}
           port: ${{ secrets.BACKEND_SSH_PORT }}
           script: |
+            set -e  # Stop on error
+
             echo "🔐 Backing up .env (if exists)"
             cd /home/apipvcl/public_html/PvClasses_Backend
             if [ -f .env ]; then
@@ -53,7 +59,7 @@ jobs:
             cp -r . /home/apipvcl/backup_backend/backup_$timestamp
 
             echo "📦 Extracting new backend.tar.gz"
-            tar -xzvf /home/apipvcl/backend.tar.gz -C .
+            tar -xzvf /home/apipvcl/backend.tar.gz -C /home/apipvcl/public_html/PvClasses_Backend --strip-components=1
             rm /home/apipvcl/backend.tar.gz
 
             echo "♻️ Restoring .env (if backup exists)"
@@ -63,7 +69,7 @@ jobs:
             fi
 
             echo "📦 Installing packages"
-            npm install --legacy-peer-deps
+            npm ci --legacy-peer-deps
 
             echo "🚀 Restarting Node app using PM2"
             pm2 restart backend-app || pm2 start index.js --name backend-app
