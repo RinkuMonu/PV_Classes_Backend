@@ -9,7 +9,7 @@ const VideoSchema = new mongoose.Schema(
     longDescription: { type: String },
     duration: { type: Number },
     order: { type: Number, required: true, unique: true },
-    isFree: { type: Boolean, default: false },
+    isFree: { type: Boolean, default: true },
   },
   { _id: false }
 );
