@@ -14,7 +14,6 @@ exports.checkAccess = async (req, res) => {
             course: itemId,
             validTill: { $gte: new Date() }
         });
-
         if (directAccess) {
             return res.status(200).json({ message: "Access granted (direct)", access: directAccess });
         }
