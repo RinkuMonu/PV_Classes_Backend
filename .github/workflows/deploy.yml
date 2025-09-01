@@ -36,7 +36,7 @@ jobs:
           port: ${{ secrets.BACKEND_SSH_PORT }}
           source: "backend.tar.gz"
           target: "/home/apipvcl/"
-          tar: false  # <- automatic extraction disabled
+          tar_exec: false   # <- disable automatic untar (correct input)
 
       - name: 🔐 SSH Deploy with .env Safety
         uses: appleboy/ssh-action@master
@@ -46,7 +46,7 @@ jobs:
           password: ${{ secrets.BACKEND_SSH_PASSWORD }}
           port: ${{ secrets.BACKEND_SSH_PORT }}
           script: |
-            set -e  # Stop on error
+            set -e  # Stop on any error
 
             echo "🔐 Backing up .env (if exists)"
             cd /home/apipvcl/public_html/PvClasses_Backend
