@@ -1,6 +1,5 @@
 const Doubt = require("../Models/Doubt");
 
-// 📌 User creates a new doubt
 exports.createDoubt = async (req, res) => {
     try {
         const userId = req.user.id; // authMiddleware se aayega
@@ -23,7 +22,6 @@ exports.createDoubt = async (req, res) => {
     }
 };
 
-// 📌 Admin provides solution to a doubt
 exports.solveDoubt = async (req, res) => {
     try {
         const { doubtId } = req.params;
@@ -49,7 +47,6 @@ exports.solveDoubt = async (req, res) => {
     }
 };
 
-// 📌 Get all doubts of a user (for user dashboard)
 exports.getUserDoubts = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -62,12 +59,33 @@ exports.getUserDoubts = async (req, res) => {
     }
 };
 
-// 📌 Get all doubts (for admin panel)
 exports.getAllDoubts = async (req, res) => {
     try {
         const doubts = await Doubt.find().populate("user", "name email").sort({ createdAt: -1 });
 
         res.status(200).json({ doubts });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+exports.getDoubtHistory = async (req, res) => {
+    try {
+        const userId = req.user.id; // token se aayega
+
+        const doubts = await Doubt.find({ user: userId })
+            .select("title description solution status createdAt updatedAt")
+            .sort({ createdAt: -1 });
+
+        if (!doubts || doubts.length === 0) {
+            return res.status(404).json({ message: "No doubt history found" });
+        }
+
+        res.status(200).json({
+            message: "Doubt history fetched successfully",
+            history: doubts
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: "Server error" });
