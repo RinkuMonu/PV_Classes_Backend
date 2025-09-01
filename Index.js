@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./Db/db");
 
-
 const contactRoutes = require("./Routes/Contact");
 const userRoute = require("./Routes/User");
 const CourseCategoryRoute = require("./Routes/CourseCategory");
@@ -25,15 +24,24 @@ const cartRoutes = require("./Routes/cart");
 const comboRoutes = require("./Routes/comboRoutes");
 const accessRoutes = require("./Routes/accessRoutes");
 
-
-
 const path = require("path");
-const bannerRoutes  = require("./Routes/Banner");
+const bannerRoutes = require("./Routes/Banner");
 const CourseDetailRoute = require("./Routes/courseDetails");
 const checkoutRouter = require("./Routes/Order");
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000", // React default
+      "http://localhost:5173", // Vite default
+      "http://127.0.0.1:5173", // sometimes browser uses 127.0.0.1
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // server.js
 app.use(express.json());
@@ -66,7 +74,7 @@ app.use("/api/combo", comboRoutes);
 
 // app.use("/api/cart", cartRoutes);
 app.use("/api/cart", cartRoutes);
-app.use("/api/checkout",checkoutRouter);
+app.use("/api/checkout", checkoutRouter);
 app.use("/api/access", accessRoutes);
 
 app.use((err, req, res, next) => {
@@ -74,5 +82,5 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5006;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
