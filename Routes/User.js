@@ -4,7 +4,10 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const {
   sendOtp,
-  loginUser,
+  register,
+  login,
+  forgotPassword,
+  resetPassword,
   updateUser,
   getUserData,
   getAllUserData,
@@ -13,12 +16,14 @@ const {
 } = require("../Controllers/userController");
 
 router.post("/get-otp", sendOtp);
-router.post("/login", loginUser);
+router.post("/register", register);
+router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 router.get("/getUser", auth, getUserData);
 router.get("/getAllUser", auth, getAllUserData);
 router.put("/updateStatus", auth, updateUserStatus);
 
-// My Courses / My Books
 router.get("/my-purchases", auth, getMyPurchases);
 
 const path = require("path");
@@ -27,10 +32,10 @@ router.put(
   "/updateUser",
   auth,
   (req, res, next) => {
-    req.subFolder = "profile_image"; // This will be inside /uploads/profile_image
+    req.subFolder = "profile_image";
     next();
   },
-  upload().single("profile_image"), // No default folder, uses req.subFolder
+  upload().single("profile_image"),
   updateUser
 );
 
