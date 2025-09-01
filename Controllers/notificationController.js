@@ -1,5 +1,5 @@
-const Notification = require("../models/Notification");
-const UserPreference = require("../models/UserPreference");
+const Notification = require("../Models/Notification");
+const UserPreference = require("../Models/UserPreference");
 
 exports.createNotification = async (req, res) => {
     try {
