@@ -1,15 +1,13 @@
 const express = require("express");
-const { createDoubt, solveDoubt, getUserDoubts, getAllDoubts } = require("../Controllers/doubtController");
+const { createDoubt, solveDoubt, getUserDoubts, getAllDoubts, getDoubtHistory } = require("../Controllers/doubtController");
 const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// User routes
-router.post("/create", authMiddleware, createDoubt); // user creates doubt
-router.get("/my-doubts", authMiddleware, getUserDoubts); // user gets his doubts
-
-// Admin routes
-router.get("/all", authMiddleware, getAllDoubts); // admin sees all doubts
-router.post("/solve/:doubtId", authMiddleware, solveDoubt); // admin solves doubt
+router.post("/create", authMiddleware, createDoubt);
+router.get("/my-doubts", authMiddleware, getUserDoubts);
+router.get("/all", authMiddleware, getAllDoubts);
+router.get("/his", authMiddleware, getDoubtHistory);
+router.post("/solve/:doubtId", authMiddleware, solveDoubt);
 
 module.exports = router;
