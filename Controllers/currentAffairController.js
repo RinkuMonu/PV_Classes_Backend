@@ -27,7 +27,9 @@ exports.createCurrentAffair = async (req, res) => {
   try {
     let imagePath = "";
     if (req.file) {
-      imagePath = `/uploads/currentaffair/${req.file.filename}`;
+      // 🔥 FIXED: path schema ke virtual se match ho
+      // imagePath = `uploads/currentaffair/${req.file.filename}`;
+      imagePath = `${req.file.filename}`;
     }
 
     const postData = {
@@ -54,8 +56,6 @@ exports.createCurrentAffair = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
-
 
 // Get All Blogs (with advanced filters)
 exports.getCurrentAffairs = async (req, res) => {
@@ -84,7 +84,7 @@ exports.getCurrentAffairs = async (req, res) => {
       if (cat) filter.category = cat._id;
     }
 
-       // Tags filter (case-insensitive match)
+    // Tags filter (case-insensitive match)
     if (tags) {
       const tagsArray = tags.split(",").map(tag => tag.trim().toLowerCase());
       filter.tags = { 
@@ -126,7 +126,6 @@ exports.getCurrentAffairs = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // Get Single Blog Detail
 exports.getCurrentAffairBySlug = async (req, res) => {

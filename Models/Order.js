@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 
-const AddressSchema = new mongoose.Schema({
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    postalCode: { type: String, required: true },
-    country: { type: String, required: true },
-}, { _id: false });
+// const AddressSchema = new mongoose.Schema({
+//     street: { type: String, required: true },
+//     city: { type: String, required: true },
+//     state: { type: String, required: true },
+//     postalCode: { type: String, required: true },
+//     country: { type: String, required: true },
+// }, { _id: false });
 
 const OrderSchema = new mongoose.Schema({
     user: {
@@ -18,31 +18,32 @@ const OrderSchema = new mongoose.Schema({
     // Courses purchase
     courses: [
         {
-            course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
-            price: { type: Number, required: true }
+            course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true }
         }
     ],
 
     // Books purchase
     books: [
         {
-            book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
-            price: { type: Number, required: true }
+            book: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true }
         }
     ],
 
     // Test Series purchase
     testSeries: [
         {
-            test: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries", required: true },
-            price: { type: Number, required: true }
+            test: { type: mongoose.Schema.Types.ObjectId, ref: "TestSeries", required: true }
         }
     ],
-
-    address: {
-        type: AddressSchema,
-        required: true
-    },
+    combo:[
+        {
+            combo: { type: mongoose.Schema.Types.ObjectId, ref: "Combo", required: true }
+        }
+    ],
+    // address: {
+    //     type: AddressSchema,
+    //     required: true
+    // },
     paymentMethod: {
         type: String,
         enum: ["card", "upi", "netbanking", "cod"],

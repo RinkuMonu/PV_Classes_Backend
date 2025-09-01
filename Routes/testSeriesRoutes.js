@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const upload = require("../middleware/upload");
 const testSeriesController = require("../Controllers/testSeriesController");
-
+const verifyToken = require("../middleware/auth");
 
 // Create series
 router.post(
@@ -13,7 +13,7 @@ router.post(
 );
 
 // Read
-router.get("/", testSeriesController.getAllTestSeries);
+router.get("/",testSeriesController.getAllTestSeries);
 router.get("/exam/:examId", testSeriesController.getByExam);
 router.get("/:id", testSeriesController.getTestSeriesById);
 
@@ -33,19 +33,19 @@ router.post("/:seriesId/tests", testSeriesController.addEmbeddedTest);
 
 // Add questions (bulk) into embedded test
 // body: { questions: [ { type, statement, options?, correctOptions?, correctNumeric?, marks?, negativeMarks? ... } ] }
-router.post("/:seriesId/tests/:testId/questions",  testSeriesController.addQuestionsToEmbeddedTest);
+router.post("/:seriesId/tests/:testId/questions",verifyToken,  testSeriesController.addQuestionsToEmbeddedTest);
 
 /* ---------- Daily-quiz / one-by-one flow ---------- */
 // Start attempt
-router.post("/:seriesId/tests/:testId/start",  testSeriesController.startEmbeddedTest);
+router.post("/:seriesId/tests/:testId/start",verifyToken,  testSeriesController.startEmbeddedTest);
 
 // Current question (resume)
-router.get("/:seriesId/attempts/:attemptId/current",  testSeriesController.getCurrentEmbedded);
+router.get("/:seriesId/attempts/:attemptId/current",verifyToken,  testSeriesController.getCurrentEmbedded);
 
 // Answer & Next
-router.post("/:seriesId/attempts/:attemptId/answer",  testSeriesController.answerEmbeddedCurrent);
+router.post("/:seriesId/attempts/:attemptId/answer",verifyToken, testSeriesController.answerEmbeddedCurrent);
 
 // Finish now
-router.post("/:seriesId/attempts/:attemptId/finish", testSeriesController.finishEmbeddedAttempt);
-
+router.post("/:seriesId/attempts/:attemptId/finish",verifyToken, testSeriesController.finishEmbeddedAttempt);
+router.get("/get-answer-sheet/:id",verifyToken, testSeriesController.getAnswerSheet);
 module.exports = router;

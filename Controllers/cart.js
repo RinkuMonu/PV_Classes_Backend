@@ -3,7 +3,7 @@ const Course = require("../Models/Course");
 const Book = require("../Models/Book");
 const PYQ = require("../Models/Pyqs");
 const TestSeries = require("../Models/TestSeries");
-
+const Combo = require("../Models/Combo");
 async function getItemPrice(itemType, itemId) {
     let price = 0;
     switch (itemType) {
@@ -58,22 +58,31 @@ exports.getCart = async (req, res) => {
       });
     }
 
-    // ✅ Populate with full data (virtuals auto included)
+    // ✅ Populate each item
     const populatedItems = await Promise.all(
       cart.items.map(async (item) => {
         let productData = null;
 
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId).populate("category_id");
+          productData = await Course.findById(item.itemId).populate("exam");
         } else if (item.itemType === "book") {
           productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
           productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
-        }
-
-        return { ...item.toObject(), details: productData };
+        }else if( item.itemType === "combo"){
+          productData = await Combo.findById(item.itemId).populate([
+            "pyqs",
+            "books",
+            "testSeries",
+            "course"
+          ]);
+        } 
+        return { 
+          ...item.toObject(), 
+          details: productData ? productData.toJSON() : null,
+         };
       })
     );
 
@@ -114,20 +123,25 @@ exports.getStorageCart = async (req, res) => {
         let productData = null;
 
         if (item.itemType === "course") {
-          productData = await Course.findById(item.itemId).populate("category_id");
+          productData = await Course.findById(item.itemId).populate("exam");
         } else if (item.itemType === "book") {
           productData = await Book.findById(item.itemId).populate("book_category_id");
         } else if (item.itemType === "testSeries") {
           productData = await TestSeries.findById(item.itemId).populate("exam_id");
         } else if (item.itemType === "pyq") {
           productData = await PYQ.findById(item.itemId);
-        }
-
-        // productData.toJSON() => virtuals include honge
-        return {
-          ...item,
+        }else if( item.itemType === "combo"){
+          productData = await Combo.findById(item.itemId).populate([
+            "pyqs",
+            "books",
+            "testSeries",
+            "course"
+          ]);
+        } 
+        return { 
+          ...item, 
           details: productData ? productData.toJSON() : null,
-        };
+         };
       })
     );
 
@@ -275,26 +289,21 @@ exports.updateQuantity = async (req, res) => {
 
 exports.clearCart = async (req, res) => {
     try {
-        const { userId } = req.body;
+        const userId = req.user.id;
         if (!userId) {
             return res.status(400).json({ message: "User ID is required" });
         }
-
         // Find the cart first
         const cart = await Cart.findOne({ user: userId });
         if (!cart) {
             return res.status(404).json({ message: "Cart not found" });
         }
-
-        // If there are items, remove them; if already empty, delete cart
         if (cart.items.length > 0) {
-            await Cart.deleteOne({ user: userId }); // delete the entire cart
+            await Cart.deleteOne({ user: userId });
         } else {
             return res.status(200).json({ message: "Cart is already empty" });
         }
-
         res.status(200).json({ message: "Cart cleared and removed from DB", subtotal: 0, tax: 0, total: 0 });
-
     } catch (error) {
         res.status(500).json({ message: "Error clearing cart", error: error.message });
     }

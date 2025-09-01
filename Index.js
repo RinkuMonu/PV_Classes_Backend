@@ -23,11 +23,14 @@ const reviewRoutes = require("./Routes/reviewRoutes");
 const cartRoutes = require("./Routes/cart");
 const comboRoutes = require("./Routes/comboRoutes");
 const accessRoutes = require("./Routes/accessRoutes");
-
+const faqRoutes = require("./Routes/faqRoutes");
+const doubtRoutes = require("./Routes/doubtRoutes");
+const notificationRoutes = require("./Routes/notificationRoutes");
 const path = require("path");
-const bannerRoutes = require("./Routes/Banner");
-const CourseDetailRoute = require("./Routes/courseDetails");
+const bannerRoutes  = require("./Routes/Banner");
 const checkoutRouter = require("./Routes/Order");
+const facultyRoute = require("./Routes/faculty");
+const notesRoute = require("./Routes/noteRoutes");
 
 const app = express();
 app.use(
@@ -58,7 +61,7 @@ app.use("/api/categories", categoriesRoute);
 app.use("/api/exam-types", ExamTypeRoute);
 app.use("/api/exams", ExamRoute);
 app.use("/api/course-category", CourseCategoryRoute);
-app.use("/api/coursedetails", CourseDetailRoute);
+app.use("/api/faculty", facultyRoute);
 app.use("/api/courses", CoursesRoute);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/wishlist", wishlistRoutes);
@@ -76,6 +79,10 @@ app.use("/api/combo", comboRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/checkout", checkoutRouter);
 app.use("/api/access", accessRoutes);
+app.use("/api/faq", faqRoutes);
+app.use("/api/notes", notesRoute);
+app.use("/api/doubt", doubtRoutes);
+app.use("/api/notification", notificationRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

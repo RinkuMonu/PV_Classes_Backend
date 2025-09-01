@@ -9,7 +9,7 @@ const VideoSchema = new mongoose.Schema(
     longDescription: { type: String },
     duration: { type: Number },
     order: { type: Number, required: true, unique: true },
-    isFree: { type: Boolean, default: false },
+    isFree: { type: Boolean, default: true },
   },
   { _id: false }
 );
@@ -23,6 +23,9 @@ const CourseSchema = new mongoose.Schema(
     exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
     type: { type: String, enum: ["Test Series", "Course"], required: true },
     price: { type: Number, default: 0 },
+    faculty: [
+  { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }
+],
     discountPrice: { type: Number, default: 0 },
     isFree: { type: Boolean, default: false },
     validity: { type: String },
@@ -38,13 +41,20 @@ const CourseSchema = new mongoose.Schema(
     images: [{ type: String }],
     videos: [VideoSchema],
     status: { type: String, enum: ["active", "inactive"], default: "active" },
-    comboId: { type: mongoose.Schema.Types.ObjectId, ref: "Combo" }
+    comboId: { type: mongoose.Schema.Types.ObjectId, ref: "Combo" },
+
+    pyqs: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PYQ"
+      }
+    ]
 
   },
   { timestamps: true }
 );
 
-CourseSchema.virtual("imagesFullPath").get(function () {
+CourseSchema.virtual("full_image").get(function () {
   if (!this.images) return [];
   return this.images.map(
     (img) => `${process.env.BASE_URL}/uploads/course/${img}`

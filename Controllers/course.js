@@ -1,4 +1,4 @@
-// const Course = require("../Models/Course");
+const Course = require("../Models/Course");
 
 // exports.createCourse = async (req, res) => {
 //   try {
@@ -163,7 +163,6 @@
 //     });
 //   }
 // };
-const Course = require("../Models/Course");
 
 // 📌 Create Course
 exports.createCourse = async (req, res) => {
@@ -172,14 +171,14 @@ exports.createCourse = async (req, res) => {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
       shortDescription, longDescription, status,
-      comboId, videos
+      comboId, videos, faculty
     } = req.body;
 
     let courseData = {
       title, slug, exam, type, author, language,
       mainMotive, price, discount_price,
       isFree, validity, shortDescription,
-      longDescription, status
+      longDescription, status, faculty
     };
 
     if (topics) courseData.topics = Array.isArray(topics) ? topics : topics.split(",");
@@ -207,7 +206,6 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-// 📌 Get all courses
 exports.getCourses = async (req, res) => {
   try {
     const { title, type, status, viewAll, exam } = req.query;
@@ -219,6 +217,7 @@ exports.getCourses = async (req, res) => {
 
     let query = Course.find(filter)
       .populate("exam")
+      .populate("faculty")
       .populate("author", "name experience profile_image_url specialization")
       .populate({
         path: "comboId",
@@ -266,6 +265,7 @@ exports.getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id)
       .populate("exam")
+      .populate("faculty")
       .populate("author", "name experience profile_image_url specialization")
       .populate({
         path: "comboId",
@@ -303,12 +303,11 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-// 📌 Update Course
 exports.updateCourse = async (req, res) => {
   try {
     let courseData = req.body;
-    if (req.file) {
-      courseData.image = `/uploads/course/${req.file.filename}`;
+    if (req.files && req.files.length > 0) {
+      courseData.images = req.files.map(file => file.filename);
     }
     if (courseData.topics) {
       courseData.topics = Array.isArray(courseData.topics) ? courseData.topics : courseData.topics.split(",");
@@ -326,7 +325,6 @@ exports.updateCourse = async (req, res) => {
   }
 };
 
-// 📌 Delete Course
 exports.deleteCourse = async (req, res) => {
   try {
     const course = await Course.findByIdAndDelete(req.params.id);

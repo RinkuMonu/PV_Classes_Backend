@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const cartItemSchema = new mongoose.Schema(
+const comboItemSchema = new mongoose.Schema(
   {
     itemType: {
       type: String,
@@ -12,6 +12,23 @@ const cartItemSchema = new mongoose.Schema(
       required: true,
     },
     quantity: { type: Number, default: 1 },
+  },
+  { _id: false }
+);
+
+const cartItemSchema = new mongoose.Schema(
+  {
+    itemType: {
+      type: String,
+      enum: ["course", "pyq", "testSeries", "book","combo"],
+      required: true,
+    },
+    itemId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    quantity: { type: Number, default: 1 },
+    comboItems: [comboItemSchema],
   },
   { _id: false }
 );
