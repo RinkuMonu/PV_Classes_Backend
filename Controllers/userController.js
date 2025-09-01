@@ -14,7 +14,7 @@ const generateToken = (user) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, phone, password } = req.body;
+    const { name, phone, password, role } = req.body;
 
     if (!name || !phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -27,13 +27,25 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({ name, phone, password: hashedPassword });
+    // Role agar body me diya hai to set ho jaayega, otherwise default "user" hi hoga
+    const user = new User({
+      name,
+      phone,
+      password: hashedPassword,
+      role: role || "user",
+    });
+
     await user.save();
 
     res.status(201).json({
       message: "User registered successfully",
       token: generateToken(user),
-      user,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        role: user.role, // 👈 role send kiya
+      },
     });
   } catch (error) {
     res.status(500).json({ message: "Registration failed", error: error.message });
