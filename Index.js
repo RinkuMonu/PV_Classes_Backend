@@ -36,6 +36,36 @@ const notesRoute = require("./Routes/noteRoutes");
 
 const app = express();
 app.use(cors());
+
+
+
+const allowedOrigins = [
+  "http://localhost:3000",    // local frontend
+  "https://yourfrontend.com", // production frontend
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like mobile apps, curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = "The CORS policy does not allow access from this origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true, // if you use cookies or Authorization headers
+  })
+);
+
+// Also handle preflight
+app.options("*", cors());
+
+
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // server.js
 app.use(express.json());
