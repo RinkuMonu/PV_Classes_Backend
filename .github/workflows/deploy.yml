@@ -10,15 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🛠️ Setup Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 📦 Compress Backend Code (exclude storage, node_modules, git)
+      - name: Compress Backend Code
         run: |
           tar --exclude='./storage' \
               --exclude='./node_modules' \
@@ -27,8 +27,8 @@ jobs:
               --warning=no-file-changed \
               -czvf backend.tar.gz . || true
 
-      - name: 🚀 Upload backend.tar.gz to server
-        uses: appleboy/scp-action@master
+      - name: Upload backend.tar.gz to server
+        uses: appleboy/scp-action@v0.1.5
         with:
           host: ${{ secrets.BACKEND_SSH_HOST }}
           username: ${{ secrets.BACKEND_SSH_USERNAME }}
@@ -36,10 +36,10 @@ jobs:
           port: ${{ secrets.BACKEND_SSH_PORT }}
           source: "backend.tar.gz"
           target: "/home/apipvcl/"
-          tar_exec: false       # disable automatic untar
-          strip_components: 0   # just copy the file
+          tar_exec: false
+          strip_components: 0
 
-      - name: 🔐 SSH Deploy Backend
+      - name: SSH Deploy Backend
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.BACKEND_SSH_HOST }}
@@ -47,34 +47,31 @@ jobs:
           password: ${{ secrets.BACKEND_SSH_PASSWORD }}
           port: ${{ secrets.BACKEND_SSH_PORT }}
           script: |
-            set -e  # stop on any error
-
+            set -e
             cd /home/apipvcl/public_html/PvClasses_Backend
 
-            echo "🔐 Backing up .env (if exists)"
+            # Backup .env
             if [ -f .env ]; then
               cp .env /home/apipvcl/.env_backup
             fi
 
-            echo "🛡️ Backup old code"
+            # Backup old code
             timestamp=$(date +%Y%m%d_%H%M%S)
             mkdir -p /home/apipvcl/backup_backend
             cp -r . /home/apipvcl/backup_backend/backup_$timestamp
 
-            echo "📦 Extracting new backend.tar.gz"
+            # Extract uploaded tar.gz
             tar -xzvf /home/apipvcl/backend.tar.gz --strip-components=1
             rm /home/apipvcl/backend.tar.gz
 
-            echo "♻️ Restoring .env (if backup exists)"
+            # Restore .env
             if [ -f /home/apipvcl/.env_backup ]; then
               cp /home/apipvcl/.env_backup .env
               rm /home/apipvcl/.env_backup
             fi
 
-            echo "📦 Installing packages"
+            # Install packages
             npm install --legacy-peer-deps
 
-            echo "🚀 Restarting Node app using PM2"
+            # Restart Node app
             pm2 restart backend-app || pm2 start index.js --name backend-app
-
-            echo "✅ Deployment finished!"
