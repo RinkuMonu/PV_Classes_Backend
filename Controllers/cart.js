@@ -27,6 +27,7 @@ async function getItemPrice(itemType, itemId) {
     return price;
 }
 
+
 async function calculateCartTotals(cart) {
     let subtotal = 0;
 

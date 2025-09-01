@@ -14,11 +14,11 @@ exports.checkAccess = async (req, res) => {
             course: itemId,
             validTill: { $gte: new Date() }
         });
-
         if (directAccess) {
             return res.status(200).json({ message: "Access granted (direct)", access: directAccess });
         }
 
+        
         // 2️⃣ Check if user purchased this item directly or via combo
         const orders = await Order.find({
             user: userId,
