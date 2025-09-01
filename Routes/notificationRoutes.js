@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../middleware/auth");
-const { setPreferences, createNotification, getUserNotifications } = require("../Controllers/NotificationController");
+const { setPreferences, createNotification, getUserNotifications } = require("../Controllers/notificationController");
 
 router.post("/set", authMiddleware, setPreferences);
 
