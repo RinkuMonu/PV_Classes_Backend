@@ -25,9 +25,8 @@ const cartRoutes = require("./Routes/cart");
 const comboRoutes = require("./Routes/comboRoutes");
 const accessRoutes = require("./Routes/accessRoutes");
 const faqRoutes = require("./Routes/faqRoutes");
-
-
-
+const doubtRoutes = require("./Routes/doubtRoutes");
+const notificationRoutes = require("./Routes/notificationRoutes");
 const path = require("path");
 const bannerRoutes  = require("./Routes/Banner");
 const checkoutRouter = require("./Routes/Order");
@@ -78,6 +77,8 @@ app.use("/api/checkout",checkoutRouter);
 app.use("/api/access", accessRoutes);
 app.use("/api/faq", faqRoutes);
 app.use("/api/notes", notesRoute);
+app.use("/api/doubt", doubtRoutes);
+app.use("/api/notification", notificationRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

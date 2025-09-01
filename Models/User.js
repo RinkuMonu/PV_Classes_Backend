@@ -4,10 +4,23 @@ const UserSchema = new mongoose.Schema(
   {
     name: { type: String, trim: true },
     email: { type: String, trim: true },
-    phone: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true, unique: true },
+    password: { type: String },
     referral_code: { type: String, default: null },
-    otp: { type: Number },
-    address: { type: String},
+    otp: { type: String },
+    otpExpires: {
+      type: Date,
+      index: { expires: 300 }, // 300 sec = 5 min auto expire
+    },
+
+    // 🔑 Forgot password OTP
+    resetPasswordOtp: { type: String },
+    resetPasswordExpires: {
+      type: Date,
+      index: { expires: 600 }, // 600 sec = 10 min auto expire
+    },
+
+    address: { type: String },
     course_id: { type: mongoose.Schema.Types.ObjectId, ref: "CourseCategory" },
     status: {
       type: String,
