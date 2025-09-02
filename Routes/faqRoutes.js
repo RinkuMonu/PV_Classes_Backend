@@ -1,5 +1,5 @@
 const express = require("express");
-const { createFAQ, getAllFAQs, updateFAQ, deleteFAQ } = require("../Controllers/faqController");
+const { createFAQ, getAllFAQs, updateFAQ, deleteFAQ, getFAQById } = require("../Controllers/faqController");
 // const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
@@ -7,7 +7,8 @@ const router = express.Router();
 // Create FAQ
 router.post("/", createFAQ);
 
-// Get all FAQs
+router.get("/:id", getFAQById);
+
 router.get("/", getAllFAQs);
 
 // Update FAQ
