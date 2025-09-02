@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Doubt = require("../Models/Doubt");
 
 exports.createDoubt = async (req, res) => {
@@ -57,6 +58,25 @@ exports.getUserDoubts = async (req, res) => {
         console.error(err);
         res.status(500).json({ message: "Server error" });
     }
+};
+
+exports.getDoubtById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID format" });
+    }
+
+    const doubt = await Doubt.findById(id);
+    if (!doubt) {
+      return res.status(404).json({ message: "Doubt not found" });
+    }
+
+    res.json(doubt);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 exports.getAllDoubts = async (req, res) => {
