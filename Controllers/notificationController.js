@@ -114,3 +114,43 @@ exports.getUserNotifications = async (req, res) => {
     });
   }
 };
+
+exports.getAllNotifications = async (req, res) => {
+  try {
+    // If you want, you can get query params for filtering or pagination
+    const { categoryId, limit, page } = req.query;
+
+    let filter = {};
+    if (categoryId) {
+      filter.category = categoryId;
+    }
+
+    // Pagination setup
+    const pageNum = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 20;
+    const skip = (pageNum - 1) * pageSize;
+
+    const notifications = await Notification.find(filter)
+      .sort({ createdAt: -1 }) // latest first
+      .skip(skip)
+      .limit(pageSize)
+      .populate("createdBy", "name email"); // optional: populate admin info
+
+    const totalNotifications = await Notification.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      total: totalNotifications,
+      page: pageNum,
+      pageSize,
+      notifications,
+    });
+  } catch (error) {
+    console.error("Error fetching notifications for admin:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching notifications",
+      error: error.message,
+    });
+  }
+};
