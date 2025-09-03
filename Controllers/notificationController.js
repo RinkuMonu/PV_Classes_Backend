@@ -154,3 +154,33 @@ exports.getAllNotifications = async (req, res) => {
     });
   }
 };
+
+
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params; // match your route
+
+    if (!id) {
+      return res.status(400).json({ message: "Notification ID is required" });
+    }
+
+    const deletedNotification = await Notification.findByIdAndDelete(id);
+
+    if (!deletedNotification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification deleted successfully (hard delete)",
+      deletedNotification,
+    });
+  } catch (error) {
+    console.error("Error deleting notification:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while deleting notification",
+      error: error.message,
+    });
+  }
+};
