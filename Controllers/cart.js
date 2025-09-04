@@ -77,7 +77,8 @@ exports.getCart = async (req, res) => {
             "pyqs",
             "books",
             "testSeries",
-            "course"
+            "courses",
+            "notes"
           ]);
         } 
         return { 
@@ -109,7 +110,7 @@ exports.getStorageCart = async (req, res) => {
   try {
     // parse cart data from query
     const items = JSON.parse(req.query.items || "[]");
-
+    console.log("Received cart items:", items);
     if (!items.length) {
       return res.status(200).json({
         success: true,
@@ -136,7 +137,8 @@ exports.getStorageCart = async (req, res) => {
             "pyqs",
             "books",
             "testSeries",
-            "course"
+            "courses",
+            "notes"
           ]);
         } 
         return { 
