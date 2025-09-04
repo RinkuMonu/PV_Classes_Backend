@@ -141,23 +141,30 @@ exports.getBannerDetail = async (req, res) => {
 // Update a banner
 exports.updateBanner = async (req, res) => {
     try {
-        const { bannerName, description, position } = req.body;
-        let imageArray = [];
+        const { bannerName, description, position, preserveImage } = req.body;
+
+        let updateData = {
+            bannerName,
+            description,
+            position,
+        };
 
         if (req.file) {
-            imageArray = [req.file.path];
-        } else if (req.files) {
-            imageArray = req.files.map(file => file.path);
+            // ✅ Single new file
+            updateData.images = [req.file.path];
+        } else if (req.files && req.files.length > 0) {
+            // ✅ Multiple new files
+            updateData.images = req.files.map(file => file.path);
+        } else if (preserveImage === "true") {
+            // ✅ Do nothing → keep existing images
+        } else {
+            // ✅ If explicitly no preserve flag → clear images
+            updateData.images = [];
         }
 
         const updatedBanner = await Banner.findByIdAndUpdate(
             req.params.id,
-            {
-                bannerName,
-                description,
-                images: imageArray,
-                position,
-            },
+            updateData,
             { new: true }
         );
 
@@ -165,9 +172,15 @@ exports.updateBanner = async (req, res) => {
             return res.status(404).json({ message: "Banner not found" });
         }
 
-        res.status(200).json({ message: "Banner updated successfully", updatedBanner });
+        res.status(200).json({
+            message: "Banner updated successfully",
+            updatedBanner,
+        });
     } catch (error) {
-        res.status(500).json({ message: "Failed to update banner", error: error.message });
+        res.status(500).json({
+            message: "Failed to update banner",
+            error: error.message,
+        });
     }
 };
 
