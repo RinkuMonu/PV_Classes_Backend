@@ -291,7 +291,8 @@ exports.getAllCoupons = async (req, res) => {
 // Get single coupon by ID
 exports.getCoupon = async (req, res) => {
   try {
-    const coupon = await Coupon.findById(req.params.id);
+    const coupon = await Coupon.findOne({ code: req.params.id }); 
+    // 👆 use your actual field name for coupon code (e.g., "code", "couponCode", "name")
 
     if (!coupon) {
       return res.status(404).json({
