@@ -228,7 +228,7 @@ exports.getCourses = async (req, res) => {
         ]
       });
 
-    if (viewAll !== "true") query = query.limit(20);
+    if (viewAll !== "true") query = query.limit(50);
 
     let courses = await query;
 
