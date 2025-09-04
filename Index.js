@@ -31,6 +31,7 @@ const bannerRoutes  = require("./Routes/Banner");
 const checkoutRouter = require("./Routes/Order");
 const facultyRoute = require("./Routes/faculty");
 const notesRoute = require("./Routes/noteRoutes");
+const countRoutes = require("./Routes/CountRoutes");
 
 const app = express();
 app.use(
@@ -38,7 +39,8 @@ app.use(
     origin: [
       "http://localhost:3000", // React default
       "http://localhost:5173", // Vite default
-      "http://127.0.0.1:5173", // sometimes browser uses 127.0.0.1
+      "http://127.0.0.1:5173",
+      "https://pvclasses.in/" // sometimes browser uses 127.0.0.1
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
@@ -83,6 +85,7 @@ app.use("/api/faq", faqRoutes);
 app.use("/api/notes", notesRoute);
 app.use("/api/doubt", doubtRoutes);
 app.use("/api/notification", notificationRoutes);
+app.use("/api/count", countRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
