@@ -268,23 +268,23 @@ exports.createCoupon = async (req, res) => {
 // Get all coupons
 exports.getAllCoupons = async (req, res) => {
   const userId = req.user.id;
-  try {
-    const coupons = await Coupon.find({
+  const { status } = req.query;
+
+  let filter = {};
+  if (status !== "all") {
+    filter = {
       isActive: true,
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() },
       usedBy: { $ne: userId },
-    }).sort({ createdAt: -1 });
+    };
+  }
 
-    res.status(200).json({
-      success: true,
-      data: coupons,
-    });
+  try {
+    const coupons = await Coupon.find(filter).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: coupons });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
