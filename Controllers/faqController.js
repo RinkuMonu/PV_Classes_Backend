@@ -24,6 +24,22 @@ exports.getAllFAQs = async (req, res) => {
     }
 };
 
+exports.getFAQById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const faq = await FAQ.findById(id);
+
+    if (!faq) {
+      return res.status(404).json({ success: false, message: "FAQ not found" });
+    }
+
+    res.status(200).json({ success: true, faq });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 // Update FAQ
 exports.updateFAQ = async (req, res) => {
     try {

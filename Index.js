@@ -31,6 +31,7 @@ const bannerRoutes  = require("./Routes/Banner");
 const checkoutRouter = require("./Routes/Order");
 const facultyRoute = require("./Routes/faculty");
 const notesRoute = require("./Routes/noteRoutes");
+const countRoutes = require("./Routes/CountRoutes");
 
 const app = express();
 app.use(
@@ -84,6 +85,7 @@ app.use("/api/faq", faqRoutes);
 app.use("/api/notes", notesRoute);
 app.use("/api/doubt", doubtRoutes);
 app.use("/api/notification", notificationRoutes);
+app.use("/api/count", countRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

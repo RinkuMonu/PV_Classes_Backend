@@ -6,13 +6,20 @@ const {
   getCategories,
   createCurrentAffair,
   getCurrentAffairs,
-  getCurrentAffairBySlug
+  getCurrentAffairBySlug,
+  updateCurrentAffair,
+  deleteCurrentAffair
 } = require("../Controllers/currentAffairController");
 
 // Category Routes
 router.post("/categories", createCategory);
 router.get("/categories", getCategories);
-
+router.put(
+  "/:id",
+  upload("currentaffair").single("image"),
+  updateCurrentAffair
+);
+router.delete("/:id", deleteCurrentAffair);
 // Blog Routes (form-data with image)
 router.post(
   "/",

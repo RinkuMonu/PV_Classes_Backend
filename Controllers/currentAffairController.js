@@ -138,3 +138,57 @@ exports.getCurrentAffairBySlug = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.updateCurrentAffair = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    let updateData = {
+      title: req.body.title,
+      slug: req.body.slug,
+      content: req.body.content,
+      excerpt: req.body.excerpt,
+      category: req.body.category,
+      tags: req.body.tags ? req.body.tags.split(",").map(tag => tag.trim()) : [],
+      publishDate: req.body.publishDate,
+      isFeatured: req.body.isFeatured === "true",
+      status: req.body.status,
+    };
+
+    // 🔥 If image is uploaded, overwrite
+    if (req.file) {
+      updateData.image = `${req.file.filename}`;
+    }
+
+    const updated = await CurrentAffair.findByIdAndUpdate(id, updateData, {
+      new: true,
+    }).populate("category", "name slug");
+
+    if (!updated) {
+      return res.status(404).json({ message: "Current affair not found" });
+    }
+
+    res.json({
+      message: "Current affair updated successfully",
+      post: updated,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// ✅ Delete Current Affair
+exports.deleteCurrentAffair = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await CurrentAffair.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Current affair not found" });
+    }
+
+    res.json({ message: "Current affair deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
