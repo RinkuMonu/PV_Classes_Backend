@@ -136,3 +136,21 @@ exports.getApprovedReviewsStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getAllReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('user', 'name')
+      .populate('course', 'title')
+      .populate('coaching', 'name')
+      .sort({ createdAt: -1 }); // latest first
+
+    res.json({
+      success: true,
+      total: reviews.length,
+      reviews,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

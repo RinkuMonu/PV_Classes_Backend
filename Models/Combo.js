@@ -16,6 +16,7 @@ const ComboSchema = new mongoose.Schema(
         books: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
         testSeries: [{ type: mongoose.Schema.Types.ObjectId, ref: "TestSeries" }],
         pyqs: [{ type: mongoose.Schema.Types.ObjectId, ref: "PYQ" }],
+        notes: [{ type: mongoose.Schema.Types.ObjectId, ref: "Note" }],
 
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
