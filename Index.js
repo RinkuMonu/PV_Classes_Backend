@@ -40,7 +40,7 @@ app.use(
       "http://localhost:3000", // React default
       "http://localhost:5173", // Vite default
       "http://127.0.0.1:5173",
-      "https://pvclasses.in/" // sometimes browser uses 127.0.0.1
+      "https://pvclasses.in", // sometimes browser uses 127.0.0.1
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
