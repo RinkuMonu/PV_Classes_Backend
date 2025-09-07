@@ -171,7 +171,7 @@ exports.createCourse = async (req, res) => {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
       shortDescription, longDescription, status,
-      comboId, videos, faculty
+      comboId, videos, faculty,faqs 
     } = req.body;
 
     let courseData = {
@@ -195,6 +195,11 @@ exports.createCourse = async (req, res) => {
 
     if (videos) {
       courseData.videos = JSON.parse(videos);
+    }
+
+      // ✅ Handle FAQs (JSON array or string)
+    if (faqs) {
+      courseData.faqs = Array.isArray(faqs) ? faqs : JSON.parse(faqs);
     }
 
     const newCourse = new Course(courseData);
@@ -314,6 +319,11 @@ exports.updateCourse = async (req, res) => {
     }
     if (courseData.features) {
       courseData.features = Array.isArray(courseData.features) ? courseData.features : courseData.features.split(",");
+    }
+
+       // ✅ Handle FAQs
+    if (courseData.faqs) {
+      courseData.faqs = Array.isArray(courseData.faqs) ? courseData.faqs : JSON.parse(courseData.faqs);
     }
 
     const course = await Course.findByIdAndUpdate(req.params.id, courseData, { new: true });
