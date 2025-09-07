@@ -14,6 +14,14 @@ const VideoSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// FAQ Schema
+const FAQSchema = new mongoose.Schema(
+  {
+    question: { type: String, required: true },
+    answer: { type: String, required: true }
+  },
+  { _id: false }
+);
 
 const CourseSchema = new mongoose.Schema(
   {
@@ -42,6 +50,9 @@ const CourseSchema = new mongoose.Schema(
     videos: [VideoSchema],
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     comboId: { type: mongoose.Schema.Types.ObjectId, ref: "Combo" },
+
+    faqs: [FAQSchema], // ✅ Add FAQs as an array of question-answer pairs
+
 
     pyqs: [
       {
