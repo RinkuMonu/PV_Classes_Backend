@@ -1,20 +1,6 @@
 const mongoose = require("mongoose");
 
-// 🎬 Video Schema
-const VideoSchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true },
-    url: { type: String, required: true },
-    shortDescription: { type: String },
-    longDescription: { type: String },
-    duration: { type: Number },
-    order: { type: Number, required: true, unique: true },
-    isFree: { type: Boolean, default: true },
-  },
-  { _id: false }
-);
-
-// FAQ Schema
+// ❓ FAQ Schema
 const FAQSchema = new mongoose.Schema(
   {
     question: { type: String, required: true },
@@ -31,9 +17,7 @@ const CourseSchema = new mongoose.Schema(
     exam: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
     type: { type: String, enum: ["Test Series", "Course"], required: true },
     price: { type: Number, default: 0 },
-    faculty: [
-  { type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }
-],
+    faculty: [{ type: mongoose.Schema.Types.ObjectId, ref: "Faculty" }],
     discountPrice: { type: Number, default: 0 },
     isFree: { type: Boolean, default: false },
     validity: { type: String },
@@ -47,20 +31,18 @@ const CourseSchema = new mongoose.Schema(
     topics: [{ type: String }],
     features: [{ type: String }],
     images: [{ type: String }],
-    videos: [VideoSchema],
+
+    // ✅ Subjects reference
+    subjects: [
+  { type: mongoose.Schema.Types.ObjectId, ref: "Subject" }
+],
+
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     comboId: { type: mongoose.Schema.Types.ObjectId, ref: "Combo" },
 
-    faqs: [FAQSchema], // ✅ Add FAQs as an array of question-answer pairs
+    faqs: [FAQSchema],
 
-
-    pyqs: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "PYQ"
-      }
-    ]
-
+    pyqs: [{ type: mongoose.Schema.Types.ObjectId, ref: "PYQ" }]
   },
   { timestamps: true }
 );
@@ -71,7 +53,6 @@ CourseSchema.virtual("full_image").get(function () {
     (img) => `${process.env.BASE_URL}/uploads/course/${img}`
   );
 });
-
 
 CourseSchema.set("toJSON", { virtuals: true });
 CourseSchema.set("toObject", { virtuals: true });

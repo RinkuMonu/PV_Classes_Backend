@@ -447,3 +447,24 @@ exports.updateCourseVideo = async (req, res) => {
   }
 };
 
+exports.addSubjectToCourse = async (req, res) => {
+  try {
+    const { courseId, subjectId } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    // Check if subject already added
+    if (!course.subjects) course.subjects = [];
+    if (course.subjects.includes(subjectId)) {
+      return res.status(400).json({ message: "Subject already added to this course" });
+    }
+
+    course.subjects.push(subjectId);
+    await course.save();
+
+    res.status(200).json({ message: "Subject added to course successfully", course });
+  } catch (error) {
+    res.status(500).json({ message: "Error adding subject to course", error: error.message });
+  }
+};
