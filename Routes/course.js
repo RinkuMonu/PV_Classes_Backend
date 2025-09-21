@@ -20,6 +20,8 @@ router.post(
     courseController.createCourse
 );
 
+router.post("/add-subject", courseController.addSubjectToCourse);
+
 // Get all courses
 router.get("/", courseController.getCourses);
 
