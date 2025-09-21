@@ -10,6 +10,10 @@ router.post("/assign", subjectController.assignSubjectToCourse); // Assign subje
 router.get("/course/:courseId", subjectController.getSubjectsByCourse); // Get subjects by course
 
 // Video + Notes
-router.post("/:subjectId/videos", uploadNotes.array("notes", 5), subjectController.uploadVideoWithNotes);
+router.post(
+  "/:subjectId/videos",
+  uploadNotes.array("notes", 5), // field name = "notes"
+  subjectController.uploadVideoWithNotes
+);
 
 module.exports = router;

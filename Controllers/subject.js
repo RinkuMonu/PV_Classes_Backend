@@ -60,22 +60,26 @@ exports.getSubjectsByCourse = async (req, res) => {
 exports.uploadVideoWithNotes = async (req, res) => {
   try {
     const { subjectId } = req.params;
-    const { title, url, duration, order, isFree } = req.body;
+    const { title, url, duration, order, isFree, shortDescription, longDescription } = req.body;
 
     const subject = await Subject.findById(subjectId);
     if (!subject) return res.status(404).json({ message: "Subject not found" });
 
+    // Handle notes files
     let notesFiles = [];
     if (req.files && req.files.length > 0) {
       notesFiles = req.files.map(file => `/uploads/notes/${file.filename}`);
     }
 
+    // Add video + notes
     subject.videos.push({
       title,
       url,
       duration: duration ? Number(duration) : null,
       order: order ? Number(order) : subject.videos.length + 1,
       isFree: isFree === "true",
+      shortDescription,
+      longDescription,
       notes: notesFiles
     });
 
@@ -83,6 +87,7 @@ exports.uploadVideoWithNotes = async (req, res) => {
 
     res.status(200).json({ message: "Video + Notes added successfully", subject });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Error uploading video with notes", error: error.message });
   }
 };
