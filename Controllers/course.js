@@ -1,4 +1,6 @@
 const Course = require("../Models/Course");
+const Subject = require("../Models/subject");
+
 
 // exports.createCourse = async (req, res) => {
 //   try {
@@ -171,7 +173,7 @@ exports.createCourse = async (req, res) => {
       title, slug, exam, type, author, language, mainMotive, topics, features,
       price, discount_price, isFree, validity,
       shortDescription, longDescription, status,
-      comboId, videos, faculty,faqs 
+      comboId, videos, faculty, faqs
     } = req.body;
 
     let courseData = {
@@ -197,7 +199,7 @@ exports.createCourse = async (req, res) => {
       courseData.videos = JSON.parse(videos);
     }
 
-      // ✅ Handle FAQs (JSON array or string)
+    // ✅ Handle FAQs (JSON array or string)
     if (faqs) {
       courseData.faqs = Array.isArray(faqs) ? faqs : JSON.parse(faqs);
     }
@@ -210,6 +212,62 @@ exports.createCourse = async (req, res) => {
     res.status(500).json({ message: "Error creating course", error: error.message });
   }
 };
+
+// exports.getCourses = async (req, res) => {
+//   try {
+//     const { title, type, status, viewAll, exam } = req.query;
+//     let filter = {};
+//     if (title) filter.title = { $regex: title, $options: "i" };
+//     if (exam) filter.exam = exam;
+//     if (type) filter.type = type;
+//     if (status) filter.status = status;
+
+//     let query = Course.find(filter)
+//       .populate("exam")
+//       .populate("faculty")
+//       .populate("author", "name experience profile_image_url specialization")
+//       .populate({
+//         path: "comboId",
+//         populate: [
+//           { path: "books", model: "Book" },
+//           { path: "testSeries", model: "TestSeries" },
+//           { path: "pyqs", model: "PYQ" }
+//         ]
+//       });
+
+//     if (viewAll !== "true") query = query.limit(50);
+
+//     let courses = await query;
+
+//     // 👇 Final Price Calculation (based on combo items)
+//     courses = courses.map(course => {
+//       let finalPrice = course.price || 0;
+//       if (course.comboId) {
+//         if (course.comboId.books) {
+//           course.comboId.books.forEach(b => {
+//             finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+//           });
+//         }
+//         if (course.comboId.testSeries) {
+//           course.comboId.testSeries.forEach(ts => {
+//             finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+//           });
+//         }
+//         if (course.comboId.pyqs) {
+//           course.comboId.pyqs.forEach(pq => {
+//             finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+//           });
+//         }
+//       }
+//       return { ...course.toObject(), finalPrice };
+//     });
+
+//     res.status(200).json(courses);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 
 exports.getCourses = async (req, res) => {
   try {
@@ -237,34 +295,71 @@ exports.getCourses = async (req, res) => {
 
     let courses = await query;
 
-    // 👇 Final Price Calculation (based on combo items)
-    courses = courses.map(course => {
-      let finalPrice = course.price || 0;
-      if (course.comboId) {
-        if (course.comboId.books) {
-          course.comboId.books.forEach(b => {
-            finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
-          });
+    // ✅ Fetch subjects for each course
+    courses = await Promise.all(
+      courses.map(async course => {
+        const subjects = await Subject.find({ course: course._id });
+
+        // Final Price calculation
+        let finalPrice = course.price || 0;
+        if (course.comboId) {
+          if (course.comboId.books) course.comboId.books.forEach(b => finalPrice += b.discount_price > 0 ? b.discount_price : b.price);
+          if (course.comboId.testSeries) course.comboId.testSeries.forEach(ts => finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price);
+          if (course.comboId.pyqs) course.comboId.pyqs.forEach(pq => finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price);
         }
-        if (course.comboId.testSeries) {
-          course.comboId.testSeries.forEach(ts => {
-            finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
-          });
-        }
-        if (course.comboId.pyqs) {
-          course.comboId.pyqs.forEach(pq => {
-            finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
-          });
-        }
-      }
-      return { ...course.toObject(), finalPrice };
-    });
+
+        return { ...course.toObject(), subjects, finalPrice };
+      })
+    );
 
     res.status(200).json(courses);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
+// exports.getCourseById = async (req, res) => {
+//   try {
+//     const course = await Course.findById(req.params.id)
+//       .populate("exam")
+//       .populate("faculty")
+//       .populate("author", "name experience profile_image_url specialization")
+//       .populate({
+//         path: "comboId",
+//         populate: [
+//           { path: "books", model: "Book" },
+//           { path: "testSeries", model: "TestSeries" },
+//           { path: "pyqs", model: "PYQ" }
+//         ]
+//       });
+
+//     if (!course) return res.status(404).json({ message: "Course not found" });
+
+//     let finalPrice = course.price || 0;
+//     if (course.comboId) {
+//       if (course.comboId.books) {
+//         course.comboId.books.forEach(b => {
+//           finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
+//         });
+//       }
+//       if (course.comboId.testSeries) {
+//         course.comboId.testSeries.forEach(ts => {
+//           finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
+//         });
+//       }
+//       if (course.comboId.pyqs) {
+//         course.comboId.pyqs.forEach(pq => {
+//           finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
+//         });
+//       }
+//     }
+
+//     res.status(200).json({ ...course.toObject(), finalPrice });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching course", error: error.message });
+//   }
+// };
+
 
 exports.getCourseById = async (req, res) => {
   try {
@@ -283,30 +378,23 @@ exports.getCourseById = async (req, res) => {
 
     if (!course) return res.status(404).json({ message: "Course not found" });
 
+    // ✅ Fetch subjects linked to this course
+    const subjects = await Subject.find({ course: course._id });
+
+    // 👇 Final Price calculation (same as before)
     let finalPrice = course.price || 0;
     if (course.comboId) {
-      if (course.comboId.books) {
-        course.comboId.books.forEach(b => {
-          finalPrice += b.discount_price > 0 ? b.discount_price : b.price;
-        });
-      }
-      if (course.comboId.testSeries) {
-        course.comboId.testSeries.forEach(ts => {
-          finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price;
-        });
-      }
-      if (course.comboId.pyqs) {
-        course.comboId.pyqs.forEach(pq => {
-          finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price;
-        });
-      }
+      if (course.comboId.books) course.comboId.books.forEach(b => finalPrice += b.discount_price > 0 ? b.discount_price : b.price);
+      if (course.comboId.testSeries) course.comboId.testSeries.forEach(ts => finalPrice += ts.discount_price > 0 ? ts.discount_price : ts.price);
+      if (course.comboId.pyqs) course.comboId.pyqs.forEach(pq => finalPrice += pq.discount_price > 0 ? pq.discount_price : pq.price);
     }
 
-    res.status(200).json({ ...course.toObject(), finalPrice });
+    res.status(200).json({ ...course.toObject(), subjects, finalPrice });
   } catch (error) {
     res.status(500).json({ message: "Error fetching course", error: error.message });
   }
 };
+
 
 exports.updateCourse = async (req, res) => {
   try {
@@ -321,7 +409,7 @@ exports.updateCourse = async (req, res) => {
       courseData.features = Array.isArray(courseData.features) ? courseData.features : courseData.features.split(",");
     }
 
-       // ✅ Handle FAQs
+    // ✅ Handle FAQs
     if (courseData.faqs) {
       courseData.faqs = Array.isArray(courseData.faqs) ? courseData.faqs : JSON.parse(courseData.faqs);
     }
@@ -344,6 +432,12 @@ exports.deleteCourse = async (req, res) => {
     res.status(500).json({ message: "Error deleting course", error: error.message });
   }
 };
+
+
+
+// **************** //
+// ye niche vale 3 controller yha kam nhi aa rhe hai enko saprate subject controller me add kar diya hai 
+//************* */
 
 exports.uploadCourseVideo = async (req, res) => {
   try {
