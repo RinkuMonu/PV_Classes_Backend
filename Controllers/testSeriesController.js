@@ -3,12 +3,44 @@ const mongoose = require("mongoose");
 const TestSeries = require("../Models/TestSeries");
 
 /* ---------- EXISTING: create ---------- */
-exports.createTestSeries = async (req, res) => {
+// exports.createTestSeries = async (req, res) => {
 
+//   try {
+//     const {
+//       exam_id, title, title_tag, description,
+//       price, discount_price, validity, total_tests, is_active
+//     } = req.body;
+
+//     let subjects = [];
+//     if (req.body.subjects) {
+//       try { subjects = JSON.parse(req.body.subjects); }
+//       catch { return res.status(400).json({ error: "Invalid JSON format for subjects" }); }
+//     }
+
+//     let images = [];
+//     if (req.files && req.files.length > 0) {
+//       images = req.files.map((file) => file.filename); // keep only filename 
+//     }
+
+//     const testSeries = await TestSeries.create({
+//       exam_id, title, title_tag, description,
+//       price, discount_price, validity, total_tests,
+//       subjects, is_active, images,
+//       tests: [], attempts: []
+//     });
+
+//     res.status(201).json({ success: true, message: "Test Series created", data: testSeries });
+//   } catch (err) {
+//     res.status(400).json({ success: false, error: err.message });
+//   }
+// };
+
+
+exports.createTestSeries = async (req, res) => {
   try {
     const {
       exam_id, title, title_tag, description,
-      price, discount_price, validity, total_tests, is_active
+      price, discount_price, validity, total_tests, is_active, is_free
     } = req.body;
 
     let subjects = [];
@@ -19,17 +51,37 @@ exports.createTestSeries = async (req, res) => {
 
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => file.filename); // keep only filename 
+      images = req.files.map((file) => file.filename);
     }
 
+    // ✅ Safely normalize is_free value
+    const isFreeValue =
+      String(is_free).replace(/"/g, '').trim().toLowerCase() === 'true';
+
     const testSeries = await TestSeries.create({
-      exam_id, title, title_tag, description,
-      price, discount_price, validity, total_tests,
-      subjects, is_active, images,
-      tests: [], attempts: []
+  exam_id,
+  title,
+  title_tag,
+  description,
+  price,
+  discount_price,
+  validity,
+  total_tests,
+  subjects,
+  is_active,
+  is_free: is_free !== undefined ? String(is_free).replace(/"/g,'').trim().toLowerCase() === 'true' : true,
+  images,
+  tests: [],
+  attempts: []
+});
+
+
+    res.status(201).json({
+      success: true,
+      message: "Test Series created",
+      data: testSeries
     });
 
-    res.status(201).json({ success: true, message: "Test Series created", data: testSeries });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
@@ -536,7 +588,7 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     if (!series) {
       return res.status(404).json({ message: "Series not found" });
     }
-    
+
     series.attempts = clean(series.attempts);
     series.tests = clean(series.tests);
 
@@ -759,8 +811,8 @@ exports.getAnswerSheet = async (req, res) => {
       // ✅ Latest attempt nikalo (agar multiple ho to)
       const latestAttempt = attemptsForTest.length
         ? attemptsForTest.reduce((latest, attempt) =>
-            new Date(attempt.createdAt) > new Date(latest.createdAt) ? attempt : latest
-          )
+          new Date(attempt.createdAt) > new Date(latest.createdAt) ? attempt : latest
+        )
         : null;
 
       // ✅ Agar attempt mila to uske responses ko questions me merge karo
@@ -780,12 +832,12 @@ exports.getAnswerSheet = async (req, res) => {
         questions: questionsWithAttempts,
         attempt: latestAttempt
           ? {
-              totalMarks: latestAttempt.totalMarks,
-              correctCount: latestAttempt.correctCount,
-              wrongCount: latestAttempt.wrongCount,
-              unattemptedCount: latestAttempt.unattemptedCount,
-              createdAt: latestAttempt.createdAt
-            }
+            totalMarks: latestAttempt.totalMarks,
+            correctCount: latestAttempt.correctCount,
+            wrongCount: latestAttempt.wrongCount,
+            unattemptedCount: latestAttempt.unattemptedCount,
+            createdAt: latestAttempt.createdAt
+          }
           : null
       };
     });
