@@ -856,7 +856,65 @@ exports.getAnswerSheet = async (req, res) => {
   }
 };
 
+exports.getRanking = async (req, res) => {
+  try {
+    const { testSeriesId, testId, attemptId } = req.params;
+    const userId = req.user._id;
 
+    // 1️⃣ Find series
+    const series = await TestSeries.findById(testSeriesId);
+    if (!series) {
+      return res.status(404).json({
+        success: false,
+        message: "Test series not found",
+      });
+    }
 
+    // 2️⃣ Filter attempts for this test only
+    const testAttempts = (series.attempts || []).filter(
+      (a) =>
+        a.test_id?.toString() === testId.toString() &&
+        a.status === "submitted"
+    );
+
+    if (testAttempts.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No submitted attempts found for this test",
+      });
+    }
+
+    // 3️⃣ Sort by marks (highest first)
+    const sorted = testAttempts.sort((a, b) => b.totalMarks - a.totalMarks);
+
+    // 4️⃣ Assign rank
+    const ranking = sorted.map((a, index) => ({
+      rank: index + 1,
+      user_id: a.user_id,
+      marks: a.totalMarks,
+      attemptId: a._id,
+    }));
+
+    // 5️⃣ Find rank for current attempt
+    const currentAttempt = ranking.find(
+      (r) => r.attemptId.toString() === attemptId.toString()
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Ranking fetched successfully",
+      totalParticipants: testAttempts.length,
+      currentRank: currentAttempt?.rank || null,
+      ranking,
+    });
+  } catch (error) {
+    console.error("Error in getRanking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
 
 
