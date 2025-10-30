@@ -28,14 +28,11 @@ jobs:
           tar \
             --exclude='./storage' \
             --exclude='./node_modules' \
-            --exclude='.git' \
+            --exclude='./.git' \
             --exclude='.DS_Store' \
-            -czvf backend.tar.gz .
-
-      - name: 🔑 Prepare SSH Key
-        run: |
-          echo "${{ secrets.AWS_SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
+            --exclude='./uploads' \
+            --exclude='./.env' \
+            -czvf backend.tar.gz . || true
 
       - name: 🚀 Upload Archive to EC2
         uses: appleboy/scp-action@master
@@ -70,8 +67,12 @@ jobs:
             mkdir -p /home/api.pvclasses.in/deploy_backups
             cp -r /home/api.pvclasses.in/public_html/PvClasses_Backend /home/api.pvclasses.in/deploy_backups/PvClasses_Backend_$timestamp || true
 
-            echo "🧼 Cleaning old code (but keeping node_modules and .env)"
-            find . -mindepth 1 -maxdepth 1 ! -name 'node_modules' ! -name '.env' -exec rm -rf {} +
+            echo "🧼 Cleaning old code (but keeping node_modules, uploads, .env)"
+            find . -mindepth 1 -maxdepth 1 \
+              ! -name 'node_modules' \
+              ! -name 'uploads' \
+              ! -name '.env' \
+              -exec rm -rf {} +
 
             echo "📦 Extracting new backend.tar.gz here"
             tar -xzvf /home/api.pvclasses.in/backend.tar.gz -C .
@@ -86,7 +87,7 @@ jobs:
             npm install --legacy-peer-deps --production
 
             echo "🚀 Restarting PM2 service"
-            pm2 restart  api.pvclasses.in || pm2 start Index.js --name  api.pvclasses.in
+            pm2 restart api.pvclasses.in || pm2 start Index.js --name api.pvclasses.in
 
             echo "💾 Saving PM2 boot config"
             pm2 save
