@@ -1,4 +1,4 @@
-name: Deploy Node.js Backend to CWP Server
+name: Deploy Node.js Backend to AWS EC2
 
 on:
   push:
@@ -13,59 +13,82 @@ jobs:
       - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 🛠️ Setup Node.js
+      - name: 🛠 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 📦 Compress Backend Code (exclude storage, node_modules)
-        run: tar --exclude='./storage' --exclude='./node_modules' --exclude='.DS_Store' --exclude='./.git' -czvf backend.tar.gz . || true
+      # sanity check: agar yahi step fail ho gaya to deploy hi mat kar
+      - name: ✅ Install deps locally just to verify
+        run: |
+          npm install --legacy-peer-deps
 
+      - name: 📦 Create Release Archive
+        run: |
+          tar \
+            --exclude='./storage' \
+            --exclude='./node_modules' \
+            --exclude='.git' \
+            --exclude='.DS_Store' \
+            -czvf backend.tar.gz .
 
+      - name: 🔑 Prepare SSH Key
+        run: |
+          echo "${{ secrets.AWS_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
 
-      - name: 🚀 Upload to Server via SCP
+      - name: 🚀 Upload Archive to EC2
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.BACKEND_SSH_HOST }}
-          username: ${{ secrets.BACKEND_SSH_USERNAME }}
-          password: ${{ secrets.BACKEND_SSH_PASSWORD }}
-          port: ${{ secrets.BACKEND_SSH_PORT }}
+          host: ${{ secrets.AWS_SSH_HOST }}
+          username: ${{ secrets.AWS_SSH_USER }}
+          port: ${{ secrets.AWS_SSH_PORT }}
+          key: ${{ secrets.AWS_SSH_KEY }}
           source: "backend.tar.gz"
-          target: "/home/apipvcl/"
+          target: "/home/api.pvclasses.in/"
 
-      - name: 🔐 SSH Deploy with .env Safety
+      - name: 🔐 SSH Deploy on EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.BACKEND_SSH_HOST }}
-          username: ${{ secrets.BACKEND_SSH_USERNAME }}
-          password: ${{ secrets.BACKEND_SSH_PASSWORD }}
-          port: ${{ secrets.BACKEND_SSH_PORT }}
+          host: ${{ secrets.AWS_SSH_HOST }}
+          username: ${{ secrets.AWS_SSH_USER }}
+          port: ${{ secrets.AWS_SSH_PORT }}
+          key: ${{ secrets.AWS_SSH_KEY }}
           script: |
-            echo "🔐 Backing up .env (if exists)"
-            cd /home/apipvcl/public_html/PvClasses_Backend
+            set -e
+
+            echo "📂 cd into live project dir"
+            cd /home/api.pvclasses.in/public_html/PvClasses_Backend
+
+            echo "🔐 Backup .env if present"
             if [ -f .env ]; then
-              cp .env /home/apipvcl/.env_backup
+              cp .env /home/api.pvclasses.in/.env_backup_pvclasses
             fi
 
-            echo "🛡️ Full code backup"
+            echo "🛡️ Taking full snapshot backup"
             timestamp=$(date +%Y%m%d_%H%M%S)
-            mkdir -p /home/apipvcl/backup_backend
-            cp -r . /home/apipvcl/backup_backend/backup_$timestamp
+            mkdir -p /home/api.pvclasses.in/deploy_backups
+            cp -r /home/api.pvclasses.in/public_html/PvClasses_Backend /home/api.pvclasses.in/deploy_backups/PvClasses_Backend_$timestamp || true
 
-            echo "📦 Extracting new backend.tar.gz"
-            tar -xzvf /home/apipvcl/backend.tar.gz -C .
-            rm /home/apipvcl/backend.tar.gz
+            echo "🧼 Cleaning old code (but keeping node_modules and .env)"
+            find . -mindepth 1 -maxdepth 1 ! -name 'node_modules' ! -name '.env' -exec rm -rf {} +
 
-            echo "♻️ Restoring .env (if backup exists)"
-            if [ -f /home/apipvcl/.env_backup ]; then
-              cp /home/apipvcl/.env_backup .env
-              rm /home/apipvcl/.env_backup
+            echo "📦 Extracting new backend.tar.gz here"
+            tar -xzvf /home/api.pvclasses.in/backend.tar.gz -C .
+            rm /home/api.pvclasses.in/backend.tar.gz
+
+            echo "♻ Restoring .env if backed up"
+            if [ -f /home/api.pvclasses.in/.env_backup_pvclasses ]; then
+              mv /home/api.pvclasses.in/.env_backup_pvclasses .env
             fi
 
-            echo "📦 Installing packages"
-            npm install --legacy-peer-deps
+            echo "📦 Installing production deps"
+            npm install --legacy-peer-deps --production
 
-            echo "🚀 Restarting Node app using PM2"
-            pm2 restart backend-app  || pm2 start Index.js --name backend-app
+            echo "🚀 Restarting PM2 service"
+            pm2 restart  api.pvclasses.in || pm2 start Index.js --name  api.pvclasses.in
 
-            echo "✅ Deployment finished!"
+            echo "💾 Saving PM2 boot config"
+            pm2 save
+
+            echo "✅ Deployment finished on EC2"
