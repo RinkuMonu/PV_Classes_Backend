@@ -917,4 +917,60 @@ exports.getRanking = async (req, res) => {
   }
 };
 
+exports.deleteEmbeddedTest = async (req, res) => {
+  const RID = sid(); // unique log id
+  const log = (...args) => console.log(`[deleteEmbeddedTest:${RID}]`, ...args);
 
+  try {
+    const { seriesId, testId } = req.params;
+
+    log("Received params:", { seriesId, testId });
+
+    if (!seriesId || !testId)
+      return res.status(400).json({ success: false, message: "seriesId and testId are required" });
+
+    // Validate IDs
+    const validSeries = mongoose.Types.ObjectId.isValid(seriesId);
+    const validTest = mongoose.Types.ObjectId.isValid(testId);
+    if (!validSeries || !validTest)
+      return res.status(400).json({ success: false, message: "Invalid seriesId or testId" });
+
+    // Find TestSeries
+    const series = await TestSeries.findById(seriesId);
+    if (!series)
+      return res.status(404).json({ success: false, message: "Test Series not found" });
+
+    log("Series found:", series.title);
+
+    // Ensure tests exist
+    if (!Array.isArray(series.tests) || series.tests.length === 0)
+      return res.status(404).json({ success: false, message: "No tests found in this series" });
+
+    // Find test index
+    const index = series.tests.findIndex(t => t._id.toString() === testId.toString());
+    if (index === -1)
+      return res.status(404).json({ success: false, message: "Test not found in this series" });
+
+    // Remove it
+    series.tests.splice(index, 1);
+    await series.save();
+
+    log(`Test with ID ${testId} deleted successfully`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Test deleted successfully",
+      deletedTestId: testId
+    });
+
+  } catch (error) {
+    console.error(`[deleteEmbeddedTest:${RID}] ERROR:`, error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  } finally {
+    console.log(`[deleteEmbeddedTest:${RID}] ----- END -----`);
+  }
+};
