@@ -3,26 +3,29 @@ name: Deploy Node.js Backend to AWS EC2
 on:
   push:
     branches:
-      - main
+      - main   # jab bhi main pe push hoga, deploy hoga
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Pull latest code from repo
       - name: 📥 Checkout Code
         uses: actions/checkout@v3
 
+      # 2. Node setup in runner (for sanity check)
       - name: 🛠 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # sanity check: agar yahi step fail ho gaya to deploy hi mat kar
+      # 3. Quickly install once to ensure package.json is valid
       - name: ✅ Install deps locally just to verify
         run: |
           npm install --legacy-peer-deps
 
+      # 4. Make deployment tarball (code only, no secrets, no uploads)
       - name: 📦 Create Release Archive
         run: |
           tar \
@@ -34,6 +37,7 @@ jobs:
             --exclude='./.env' \
             -czvf backend.tar.gz . || true
 
+      # 5. Copy tarball to server over SSH key
       - name: 🚀 Upload Archive to EC2
         uses: appleboy/scp-action@master
         with:
@@ -44,6 +48,7 @@ jobs:
           source: "backend.tar.gz"
           target: "/home/api.pvclasses.in/"
 
+      # 6. SSH into server and deploy
       - name: 🔐 SSH Deploy on EC2
         uses: appleboy/ssh-action@master
         with:
@@ -54,42 +59,42 @@ jobs:
           script: |
             set -e
 
-            echo "📂 cd into live project dir"
+            echo "📂 Go to live project dir"
             cd /home/api.pvclasses.in/public_html/PvClasses_Backend
 
-            echo "🔐 Backup .env if present"
+            echo "🔐 Backup current .env if exists"
             if [ -f .env ]; then
               cp .env /home/api.pvclasses.in/.env_backup_pvclasses
             fi
 
-            echo "🛡️ Taking full snapshot backup"
+            echo "🛡️ Take snapshot backup of current running code"
             timestamp=$(date +%Y%m%d_%H%M%S)
             mkdir -p /home/api.pvclasses.in/deploy_backups
             cp -r /home/api.pvclasses.in/public_html/PvClasses_Backend /home/api.pvclasses.in/deploy_backups/PvClasses_Backend_$timestamp || true
 
-            echo "🧼 Cleaning old code (but keeping node_modules, uploads, .env)"
+            echo "🧼 Clean old code (KEEP node_modules, uploads, .env)"
             find . -mindepth 1 -maxdepth 1 \
               ! -name 'node_modules' \
               ! -name 'uploads' \
               ! -name '.env' \
               -exec rm -rf {} +
 
-            echo "📦 Extracting new backend.tar.gz here"
+            echo "📦 Extract new code from backend.tar.gz"
             tar -xzvf /home/api.pvclasses.in/backend.tar.gz -C .
             rm /home/api.pvclasses.in/backend.tar.gz
 
-            echo "♻ Restoring .env if backed up"
+            echo "♻ Restore .env"
             if [ -f /home/api.pvclasses.in/.env_backup_pvclasses ]; then
               mv /home/api.pvclasses.in/.env_backup_pvclasses .env
             fi
 
-            echo "📦 Installing production deps"
+            echo "📦 Install production deps on server"
             npm install --legacy-peer-deps --production
 
-            echo "🚀 Restarting PM2 service"
+            echo "🚀 Reload PM2 process"
             pm2 restart api.pvclasses.in || pm2 start Index.js --name api.pvclasses.in
 
-            echo "💾 Saving PM2 boot config"
+            echo "💾 Save PM2 boot config"
             pm2 save
 
-            echo "✅ Deployment finished on EC2"
+            echo "✅ Deployment finished successfully"
