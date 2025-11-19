@@ -216,6 +216,68 @@ exports.addQuestionsToEmbeddedTest = async (req, res) => {
   }
 };
 
+
+/* -------------------- DELETE QUESTION FROM EMBEDDED TEST -------------------- */
+exports.deleteQuestionFromEmbeddedTest = async (req, res) => {
+  const RID = sid();
+  const log = (...a) => console.log(`[deleteQuestion:${RID}]`, ...a);
+
+  try {
+    log("START", req.method, req.originalUrl, "params:", req.params);
+
+    const { seriesId, testId, questionId } = req.params || {};
+    if (!seriesId || !testId || !questionId) {
+      log("ERR missing params");
+      return res.status(400).json({ message: "seriesId, testId, or questionId missing" });
+    }
+
+    if (!validId(seriesId) || !validId(testId) || !validId(questionId)) {
+      log("ERR invalid ObjectId");
+      return res.status(400).json({ message: "Invalid seriesId, testId, or questionId" });
+    }
+
+    const series = await TestSeries.findById(seriesId);
+    if (!series) {
+      log("ERR series not found");
+      return res.status(404).json({ message: "Series not found" });
+    }
+
+    series.tests = clean(series.tests);
+    const test = findByIdManual(series.tests, testId);
+    if (!test) {
+      log("ERR test not found");
+      return res.status(404).json({ message: "Test not found" });
+    }
+
+    test.questions = clean(test.questions);
+    const questionIndex = test.questions.findIndex(q => 
+      q && q._id && String(q._id) === String(questionId)
+    );
+
+    if (questionIndex === -1) {
+      log("ERR question not found");
+      return res.status(404).json({ message: "Question not found" });
+    }
+
+    // Remove the question
+    test.questions.splice(questionIndex, 1);
+    await series.save();
+
+    log("OK question deleted");
+    return res.json({ 
+      success: true, 
+      message: "Question deleted successfully",
+      deletedQuestionId: questionId
+    });
+
+  } catch (e) {
+    console.error(`[deleteQuestion:${RID}] ERROR`, e && e.stack ? e.stack : e);
+    return res.status(500).json({ message: e.message || "Internal Server Error" });
+  } finally {
+    console.log(`[deleteQuestion:${RID}] END`);
+  }
+};
+
 /* =========================================================
    NEW: Daily Quiz Flow (single model)
    ========================================================= */

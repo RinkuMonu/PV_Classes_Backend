@@ -35,6 +35,9 @@ router.post("/:seriesId/tests", testSeriesController.addEmbeddedTest);
 // body: { questions: [ { type, statement, options?, correctOptions?, correctNumeric?, marks?, negativeMarks? ... } ] }
 router.post("/:seriesId/tests/:testId/questions",verifyToken,  testSeriesController.addQuestionsToEmbeddedTest);
 
+// Delete question from embedded test
+router.delete("/:seriesId/tests/:testId/questions/:questionId", verifyToken, testSeriesController.deleteQuestionFromEmbeddedTest);
+
 /* ---------- Daily-quiz / one-by-one flow ---------- */
 // Start attempt
 router.post("/:seriesId/tests/:testId/start",verifyToken,  testSeriesController.startEmbeddedTest);
