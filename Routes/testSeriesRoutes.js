@@ -16,7 +16,7 @@ router.post(
 router.get("/",testSeriesController.getAllTestSeries);
 router.get("/exam/:examId", testSeriesController.getByExam);
 router.get("/:id", testSeriesController.getTestSeriesById);
-
+router.get("/ranking/:testSeriesId/:testId/:attemptId", verifyToken, testSeriesController.getRanking);
 // Update (FIXED field name)
 router.put(
   "/:id",
@@ -26,7 +26,7 @@ router.put(
 
 // Delete
 router.delete("/:id", testSeriesController.deleteTestSeries);
-
+router.delete("/delete-test/:seriesId/:testId", verifyToken, testSeriesController.deleteEmbeddedTest);
 /* ---------- Admin helpers (same model) ---------- */
 // Add a test into a series
 router.post("/:seriesId/tests", testSeriesController.addEmbeddedTest);

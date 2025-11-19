@@ -3,12 +3,44 @@ const mongoose = require("mongoose");
 const TestSeries = require("../Models/TestSeries");
 
 /* ---------- EXISTING: create ---------- */
-exports.createTestSeries = async (req, res) => {
+// exports.createTestSeries = async (req, res) => {
 
+//   try {
+//     const {
+//       exam_id, title, title_tag, description,
+//       price, discount_price, validity, total_tests, is_active
+//     } = req.body;
+
+//     let subjects = [];
+//     if (req.body.subjects) {
+//       try { subjects = JSON.parse(req.body.subjects); }
+//       catch { return res.status(400).json({ error: "Invalid JSON format for subjects" }); }
+//     }
+
+//     let images = [];
+//     if (req.files && req.files.length > 0) {
+//       images = req.files.map((file) => file.filename); // keep only filename 
+//     }
+
+//     const testSeries = await TestSeries.create({
+//       exam_id, title, title_tag, description,
+//       price, discount_price, validity, total_tests,
+//       subjects, is_active, images,
+//       tests: [], attempts: []
+//     });
+
+//     res.status(201).json({ success: true, message: "Test Series created", data: testSeries });
+//   } catch (err) {
+//     res.status(400).json({ success: false, error: err.message });
+//   }
+// };
+
+
+exports.createTestSeries = async (req, res) => {
   try {
     const {
       exam_id, title, title_tag, description,
-      price, discount_price, validity, total_tests, is_active
+      price, discount_price, validity, total_tests, is_active, is_free
     } = req.body;
 
     let subjects = [];
@@ -19,17 +51,37 @@ exports.createTestSeries = async (req, res) => {
 
     let images = [];
     if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => file.filename); // keep only filename 
+      images = req.files.map((file) => file.filename);
     }
 
+    // ✅ Safely normalize is_free value
+    const isFreeValue =
+      String(is_free).replace(/"/g, '').trim().toLowerCase() === 'true';
+
     const testSeries = await TestSeries.create({
-      exam_id, title, title_tag, description,
-      price, discount_price, validity, total_tests,
-      subjects, is_active, images,
-      tests: [], attempts: []
+  exam_id,
+  title,
+  title_tag,
+  description,
+  price,
+  discount_price,
+  validity,
+  total_tests,
+  subjects,
+  is_active,
+  is_free: is_free !== undefined ? String(is_free).replace(/"/g,'').trim().toLowerCase() === 'true' : true,
+  images,
+  tests: [],
+  attempts: []
+});
+
+
+    res.status(201).json({
+      success: true,
+      message: "Test Series created",
+      data: testSeries
     });
 
-    res.status(201).json({ success: true, message: "Test Series created", data: testSeries });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
@@ -598,7 +650,7 @@ exports.answerEmbeddedCurrent = async (req, res) => {
     if (!series) {
       return res.status(404).json({ message: "Series not found" });
     }
-    
+
     series.attempts = clean(series.attempts);
     series.tests = clean(series.tests);
 
@@ -821,8 +873,8 @@ exports.getAnswerSheet = async (req, res) => {
       // ✅ Latest attempt nikalo (agar multiple ho to)
       const latestAttempt = attemptsForTest.length
         ? attemptsForTest.reduce((latest, attempt) =>
-            new Date(attempt.createdAt) > new Date(latest.createdAt) ? attempt : latest
-          )
+          new Date(attempt.createdAt) > new Date(latest.createdAt) ? attempt : latest
+        )
         : null;
 
       // ✅ Agar attempt mila to uske responses ko questions me merge karo
@@ -842,12 +894,12 @@ exports.getAnswerSheet = async (req, res) => {
         questions: questionsWithAttempts,
         attempt: latestAttempt
           ? {
-              totalMarks: latestAttempt.totalMarks,
-              correctCount: latestAttempt.correctCount,
-              wrongCount: latestAttempt.wrongCount,
-              unattemptedCount: latestAttempt.unattemptedCount,
-              createdAt: latestAttempt.createdAt
-            }
+            totalMarks: latestAttempt.totalMarks,
+            correctCount: latestAttempt.correctCount,
+            wrongCount: latestAttempt.wrongCount,
+            unattemptedCount: latestAttempt.unattemptedCount,
+            createdAt: latestAttempt.createdAt
+          }
           : null
       };
     });
@@ -866,7 +918,121 @@ exports.getAnswerSheet = async (req, res) => {
   }
 };
 
+exports.getRanking = async (req, res) => {
+  try {
+    const { testSeriesId, testId, attemptId } = req.params;
+    const userId = req.user._id;
 
+    // 1️⃣ Find series
+    const series = await TestSeries.findById(testSeriesId);
+    if (!series) {
+      return res.status(404).json({
+        success: false,
+        message: "Test series not found",
+      });
+    }
 
+    // 2️⃣ Filter attempts for this test only
+    const testAttempts = (series.attempts || []).filter(
+      (a) =>
+        a.test_id?.toString() === testId.toString() &&
+        a.status === "submitted"
+    );
 
+    if (testAttempts.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No submitted attempts found for this test",
+      });
+    }
 
+    // 3️⃣ Sort by marks (highest first)
+    const sorted = testAttempts.sort((a, b) => b.totalMarks - a.totalMarks);
+
+    // 4️⃣ Assign rank
+    const ranking = sorted.map((a, index) => ({
+      rank: index + 1,
+      user_id: a.user_id,
+      marks: a.totalMarks,
+      attemptId: a._id,
+    }));
+
+    // 5️⃣ Find rank for current attempt
+    const currentAttempt = ranking.find(
+      (r) => r.attemptId.toString() === attemptId.toString()
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Ranking fetched successfully",
+      totalParticipants: testAttempts.length,
+      currentRank: currentAttempt?.rank || null,
+      ranking,
+    });
+  } catch (error) {
+    console.error("Error in getRanking:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+
+exports.deleteEmbeddedTest = async (req, res) => {
+  const RID = sid(); // unique log id
+  const log = (...args) => console.log(`[deleteEmbeddedTest:${RID}]`, ...args);
+
+  try {
+    const { seriesId, testId } = req.params;
+
+    log("Received params:", { seriesId, testId });
+
+    if (!seriesId || !testId)
+      return res.status(400).json({ success: false, message: "seriesId and testId are required" });
+
+    // Validate IDs
+    const validSeries = mongoose.Types.ObjectId.isValid(seriesId);
+    const validTest = mongoose.Types.ObjectId.isValid(testId);
+    if (!validSeries || !validTest)
+      return res.status(400).json({ success: false, message: "Invalid seriesId or testId" });
+
+    // Find TestSeries
+    const series = await TestSeries.findById(seriesId);
+    if (!series)
+      return res.status(404).json({ success: false, message: "Test Series not found" });
+
+    log("Series found:", series.title);
+
+    // Ensure tests exist
+    if (!Array.isArray(series.tests) || series.tests.length === 0)
+      return res.status(404).json({ success: false, message: "No tests found in this series" });
+
+    // Find test index
+    const index = series.tests.findIndex(t => t._id.toString() === testId.toString());
+    if (index === -1)
+      return res.status(404).json({ success: false, message: "Test not found in this series" });
+
+    // Remove it
+    series.tests.splice(index, 1);
+    await series.save();
+
+    log(`Test with ID ${testId} deleted successfully`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Test deleted successfully",
+      deletedTestId: testId
+    });
+
+  } catch (error) {
+    console.error(`[deleteEmbeddedTest:${RID}] ERROR:`, error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: error.message
+    });
+  } finally {
+    console.log(`[deleteEmbeddedTest:${RID}] ----- END -----`);
+  }
+};

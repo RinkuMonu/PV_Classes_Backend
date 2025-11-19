@@ -92,13 +92,17 @@ const testSeriesSchema = new mongoose.Schema(
     is_active: { type: Boolean, default: true },
     images: { type: [String], default: [] },
 
+   is_free: {
+  type: Boolean,
+  default: true,  // ✅ default free
+},
     // NEW: all tests/questions live here
     tests: { type: [embeddedTestSchema], default: [] },
 
     // NEW: attempts (optional retention — you can purge old)
     attempts: { type: [attemptSchema], default: [] }
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
@@ -113,7 +117,7 @@ testSeriesSchema.virtual("full_image").get(function () {
 });
 
 // Helper: sanitize question (hide answers)
-testSeriesSchema.methods.sanitizeQuestion = function(q) {
+testSeriesSchema.methods.sanitizeQuestion = function (q) {
   const obj = q.toObject ? q.toObject() : q;
   delete obj.correctOptions;
   delete obj.correctNumeric;
