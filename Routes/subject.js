@@ -1,32 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const subjectController = require("../Controllers/subject");
-const uploadNotes = require("../middleware/notesMiddleware");
+const subjectController = require('../Controllers/SubjectController'); 
 
-// Subject CRUD
-router.post("/", subjectController.createSubject); // Create Subject
-router.get("/", subjectController.getAllSubjects); // Get all subjects
+router.post('/', subjectController.createSubject);
+router.get('/', subjectController.getAllSubjects);
 
-router.put("/:subjectId", subjectController.updateSubject); // Update subject
-router.delete("/:subjectId", subjectController.deleteSubject); // Delete subject
+router.get('/:slug', subjectController.getSingleSubject);
 
-router.post("/assign", subjectController.assignSubjectToCourse); // Assign subject to course
-router.get("/course/:courseId", subjectController.getSubjectsByCourse); // Get subjects by course
+router.put('/:id', subjectController.updateSubject);
 
-// Video + Notes
-router.post(
-  "/:subjectId/videos",
-  uploadNotes.array("notes", 5), // field name = "notes"
-  subjectController.uploadVideoWithNotes
-);
-
-
-router.put(
-  "/:subjectId/videos/:videoIndex",
-  uploadNotes.array("notes", 5),
-  subjectController.updateVideoSimple
-);
-
-
+router.delete('/:id', subjectController.deleteSubject);
 
 module.exports = router;
