@@ -23,6 +23,18 @@ const youTubeClassSchema = new mongoose.Schema(
       required: true, // kis course / batch se related
     },
 
+       courseId: {                      // 👈 NEW
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+
+    topicId: {                       // 👈 NEW
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subject",
+      required: true,
+    },
+
     orderId: {
       type: Number,
       required: true,

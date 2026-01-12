@@ -18,7 +18,7 @@ const topicSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "Teacher",
       },
-    ],    
+    ],  
     title: {
       type: String,
       required: true,
