@@ -20,7 +20,7 @@ exports.joinLiveClass = async (req, res) => {
         startedBy: uid,
       });
     }
-    
+
 
     // 🔹 Save participant join
     await LiveParticipant.create({
@@ -47,6 +47,63 @@ exports.joinLiveClass = async (req, res) => {
       success: false,
       message: "Failed to join live class",
       error: err.message,
+    });
+  }
+};
+
+// In your backend controller
+exports.leaveLiveClass = async (req, res) => {
+  try {
+    const { classId, userId, role } = req.body;
+
+    // Update participant left time
+    await LiveParticipant.findOneAndUpdate(
+      { classId, userId, leftAt: null },
+      { leftAt: Date.now() }
+    );
+
+    // Check if all teachers left - end session
+    const activeTeachers = await LiveParticipant.countDocuments({
+      classId,
+      role: 'teacher',
+      leftAt: null
+    });
+
+    if (activeTeachers === 0) {
+      await LiveSession.findOneAndUpdate(
+        { classId },
+        { status: 'ended', endedAt: Date.now() }
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Successfully left the class'
+    });
+  } catch (err) {
+    console.error('Leave live class error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to leave class'
+    });
+  }
+};
+
+exports.getActiveSessions = async (req, res) => {
+  try {
+    const activeSessions = await LiveSession.find({
+      status: 'live'
+    }).populate('participants');
+
+    res.json({
+      success: true,
+      data: activeSessions
+    });
+  } catch (err) {
+    console.error('Get active sessions error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get active sessions'
     });
   }
 };
@@ -121,7 +178,6 @@ exports.getClassesByTopic = async (req, res) => {
     });
   }
 };
-
 
 exports.getYouTubeClassById = async (req, res) => {
   try {

@@ -6,9 +6,15 @@ const { joinLiveClass,
     getYouTubeClassById,
     updateYouTubeClass,
     deleteYouTubeClass,
-    getClassesByTopic, } = require("../Controllers/ClassController");
+    getClassesByTopic,
+    leaveLiveClass,
+    getActiveSessions, } = require("../Controllers/ClassController");
 
 router.post("/join", joinLiveClass);
+
+router.post('/leave', leaveLiveClass); // Add this
+router.get('/sessions/active', getActiveSessions); // Add this
+
 
 router.post("/create", createYouTubeClass);
 
