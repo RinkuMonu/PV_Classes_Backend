@@ -3,7 +3,7 @@ const slugify = require('slugify');
 
 exports.createSubject = async (req, res) => {
     try {
-        const { title, description, status, course } = req.body;
+        const { title, description, status, course , batch  } = req.body;
 
         // Title से slug generate करना
         // unique: true constraint के कारण यह आवश्यक है
@@ -14,7 +14,8 @@ exports.createSubject = async (req, res) => {
             slug,
             description,
             status,
-            course
+            course,
+            batch 
         });
 
         const savedSubject = await newSubject.save();
@@ -66,6 +67,27 @@ exports.getAllSubjects = async (req, res) => {
         });
     }
 };
+
+exports.getSubjectsByBatch = async (req, res) => {
+    try {
+        const subjects = await Subject.find({ batch: req.params.batchId })
+            .populate('course', 'title slug')
+            .populate('batch', 'name');
+
+        res.status(200).json({
+            success: true,
+            count: subjects.length,
+            data: subjects
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Could not fetch subjects by batch',
+            error: error.message
+        });
+    }
+};
+
 
 exports.getSingleSubject = async (req, res) => {
     try {
