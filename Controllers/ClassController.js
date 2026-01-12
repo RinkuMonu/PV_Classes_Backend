@@ -20,6 +20,7 @@ exports.joinLiveClass = async (req, res) => {
         startedBy: uid,
       });
     }
+    
 
     // 🔹 Save participant join
     await LiveParticipant.create({
