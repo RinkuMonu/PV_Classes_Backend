@@ -52,7 +52,7 @@ exports.joinLiveClass = async (req, res) => {
 
 exports.createYouTubeClass = async (req, res) => {
   try {
-    const { title, description, youtubeUrl, classId, orderId } = req.body;
+    const { title, description, youtubeUrl, classId, orderId, courseId, topicId } = req.body;
 
     const newClass = await YouTubeClass.create({
       title,
@@ -60,6 +60,8 @@ exports.createYouTubeClass = async (req, res) => {
       youtubeUrl,
       classId,
       orderId,
+      courseId,
+      topicId,
     });
 
     res.status(201).json({
@@ -97,6 +99,28 @@ exports.getYouTubeClasses = async (req, res) => {
     });
   }
 };
+
+exports.getClassesByTopic = async (req, res) => {
+  try {
+    const { topicId } = req.params;
+
+    const classes = await YouTubeClass.find({ topicId })
+      .sort({ orderId: 1 });
+
+    res.json({
+      success: true,
+      count: classes.length,
+      data: classes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch classes by topic",
+      error: error.message,
+    });
+  }
+};
+
 
 exports.getYouTubeClassById = async (req, res) => {
   try {
